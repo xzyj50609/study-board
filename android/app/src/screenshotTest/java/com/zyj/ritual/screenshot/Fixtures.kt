@@ -68,6 +68,8 @@ internal fun buildState(doneTasks: Int, withHistory: Boolean = false): TodayStat
         credit = credit,
         copy = copy,
         today = TODAY,
+        pausedDates = emptySet(),
+        paperSessions = emptyList(),
     )
 }
 

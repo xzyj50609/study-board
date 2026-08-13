@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,12 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zyj.ritual.data.repository.TodayState
 import com.zyj.ritual.domain.calculator.CreditCalculator
 import com.zyj.ritual.domain.calculator.TodayCopyResolver
 import com.zyj.ritual.domain.model.CreditState
+import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
 import com.zyj.ritual.ui.components.CreditCard
@@ -39,6 +43,7 @@ import com.zyj.ritual.ui.components.TaskRow
 import com.zyj.ritual.ui.components.TaskRowState
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualFontFamilies
+import com.zyj.ritual.ui.theme.RitualRadius
 import com.zyj.ritual.ui.theme.RitualSpace
 import com.zyj.ritual.ui.theme.RitualTextStyles
 import com.zyj.ritual.ui.theme.RitualTypeSize
@@ -74,6 +79,8 @@ fun TodayScreen(
     onAddVocabWords: (Int) -> Unit = {},
     onAddVocabReview: (Int) -> Unit = {},
     onOpenVocabBoard: () -> Unit = {},
+    onRegisterPaperSession: (String) -> Unit = {},
+    onUndoPaperSession: (Long) -> Unit = {},
 ) {
     // 撤销确认弹窗状态
     var undoDialog by remember { mutableStateOf<UndoDialogState?>(null) }
@@ -247,6 +254,15 @@ fun TodayScreen(
                 onReschedule = { showRescheduleDialog = true },
             )
         }
+
+        Spacer(Modifier.height(RitualSpace.sectionGap))
+
+        // —— 整套卷登记 / 消化期 ——
+        PaperSessionSection(
+            state = state,
+            onRegister = onRegisterPaperSession,
+            onUndo = onUndoPaperSession,
+        )
 
         Spacer(Modifier.height(RitualSpace.sectionGap))
 
@@ -426,6 +442,153 @@ private fun TaskGroup(
 }
 
 // —— 撤销确认弹窗 ——
+
+@Composable
+private fun PaperSessionSection(
+    state: TodayState,
+    onRegister: (String) -> Unit,
+    onUndo: (Long) -> Unit,
+) {
+    var showRegisterDialog by remember { mutableStateOf(false) }
+    val digestionNote = state.copy.digestionNote
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = RitualSpace.screenPadding),
+    ) {
+        // 今天是消化日时，先给一条不催人的提示
+        if (digestionNote != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(RitualRadius.button))
+                    .background(RitualColors.accentGold.copy(alpha = 0.10f))
+                    .padding(12.dp),
+            ) {
+                Text(
+                    text = digestionNote,
+                    style = RitualTypography.bodyMedium,
+                    color = RitualColors.accentGold,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                "整套卷",
+                style = RitualTypography.labelSmall,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                "登记整套卷",
+                style = RitualTypography.bodySmall.copy(
+                    color = RitualColors.accentInk,
+                    fontWeight = FontWeight.Medium,
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(RitualRadius.button))
+                    .clickable { showRegisterDialog = true }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
+
+        if (state.paperSessions.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            state.paperSessions.forEach { session ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "${session.name} · " +
+                            "${session.completedDate.monthValue}月${session.completedDate.dayOfMonth}日",
+                        style = RitualTypography.bodySmall,
+                        color = RitualColors.onBgMuted,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "撤销",
+                        style = RitualTypography.bodySmall.copy(color = RitualColors.warnText),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable { onUndo(session.id) }
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
+            }
+        }
+    }
+
+    if (showRegisterDialog) {
+        RegisterPaperDialog(
+            defaultName = "${state.today.year} 年卷",
+            onConfirm = { name ->
+                onRegister(name)
+                showRegisterDialog = false
+            },
+            onDismiss = { showRegisterDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun RegisterPaperDialog(
+    defaultName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(defaultName) }
+    AlertDialog(
+        containerColor = RitualColors.surface,
+        titleContentColor = RitualColors.onBg,
+        textContentColor = RitualColors.onBgMuted,
+        onDismissRequest = onDismiss,
+        title = { Text("登记整套卷", style = RitualTypography.titleMedium) },
+        text = {
+            Column {
+                Text(
+                    "一套卷 = 4 篇阅读 + 完形 + 新题型 + 翻译，共 7 个卷面部分。\n" +
+                        "登记后进入 4 个完整消化日，消化期内不排新计划、不算欠账。",
+                    style = RitualTypography.bodyMedium,
+                )
+                Spacer(Modifier.height(RitualSpace.listGap))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("卷名") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name.ifBlank { defaultName }) }) {
+                Text(
+                    "登记",
+                    style = RitualTypography.bodyMedium.copy(
+                        color = RitualColors.accentInk,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "取消",
+                    style = RitualTypography.bodyMedium.copy(color = RitualColors.onBgMuted),
+                )
+            }
+        },
+    )
+}
 
 private data class UndoDialogState(
     val articleIndex: Int,

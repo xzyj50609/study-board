@@ -47,6 +47,7 @@ fun VocabSetupScreen(
     var initialDoneStr by remember { mutableStateOf(currentConfig.initialDone.toString()) }
     var dailyWordsStr by remember { mutableStateOf(currentConfig.dailyWords.toString()) }
     var examDate by remember { mutableStateOf(currentConfig.examDate) }
+    var planStartDate by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
     var isSaving by remember { mutableStateOf(false) }
@@ -120,6 +121,22 @@ fun VocabSetupScreen(
                         onValueChange = { examDate = it },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("计划起算日 (YYYY-MM-DD，留空=不分段)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = RitualColors.onBg)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = planStartDate,
+                        onValueChange = { planStartDate = it },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "填了日期后，计划线从那天起按「每日计划新词」起算，" +
+                            "那天之前的历史进度只计入已背总数、不再回推成欠账。",
+                        fontSize = 12.sp,
+                        color = RitualColors.onBgMuted
+                    )
                 }
             }
 
@@ -133,17 +150,16 @@ fun VocabSetupScreen(
                     val init = initialDoneStr.toIntOrNull() ?: currentConfig.initialDone
                     val daily = dailyWordsStr.toIntOrNull() ?: currentConfig.dailyWords
 
-                    val newConfig = currentConfig.copy(
-                        bookName = bookName.ifBlank { currentConfig.bookName },
-                        totalWords = total,
-                        initialDone = init,
-                        dailyWords = daily,
-                        examDate = examDate.ifBlank { currentConfig.examDate }
-                    )
-
                     isSaving = true
                     scope.launch {
-                        vocabRepository.saveConfig(newConfig)
+                        vocabRepository.saveSetup(
+                            bookName = bookName,
+                            totalWords = total,
+                            initialDone = init,
+                            dailyWords = daily,
+                            examDate = examDate,
+                            planStartDate = planStartDate.trim().ifBlank { null },
+                        )
                         isSaving = false
                         onSaved()
                     }

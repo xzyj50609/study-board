@@ -38,12 +38,19 @@ object DayStatusResolver {
         date: LocalDate,
         today: LocalDate,
         creditState: CreditState,
+        pausedDates: Set<LocalDate> = emptySet(),
     ): CalendarCellStatus {
         val completedIds = records.associate { it.id to it }
 
         // R26：计划开始前
         if (date < plan.planStartDate) {
             return CalendarCellStatus.BEFORE_START
+        }
+
+        // 消化日优先于其他一切判定：这天不排计划、不算欠账，
+        // 但格子要认得出"这是整卷换来的休整"，不是空白也不是缺口
+        if (date in pausedDates) {
+            return CalendarCellStatus.DIGESTION
         }
 
         val dayPlan = calendar.getDayPlan(date)
@@ -68,14 +75,18 @@ object DayStatusResolver {
      * 判断某天是否可交互（能不能在面板里勾/取消）。
      * - 计划开始前 → 不可勾
      * - 非计划日 → 不可勾
+     * - 消化日 → 不可在日历面板勾（没有"当日计划"可勾），
+     *   但文章详情页仍可主动提前学习——那是另一条路径
      * - 其他 → 可勾（今天、过去、未来都可以操作）
      */
     fun isInteractive(
         plan: Plan,
         calendar: PlanCalendar,
         date: LocalDate,
+        pausedDates: Set<LocalDate> = emptySet(),
     ): Boolean {
         if (date < plan.planStartDate) return false
+        if (date in pausedDates) return false
         val dayPlan = calendar.getDayPlan(date)
         return dayPlan.isPlanDay
     }

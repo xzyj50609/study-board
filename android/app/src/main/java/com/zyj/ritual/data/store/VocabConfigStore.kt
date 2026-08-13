@@ -27,6 +27,8 @@ class VocabConfigStore(
         val START_DATE = stringPreferencesKey("start_date")
         val TOTAL_WORDS = intPreferencesKey("total_words")
         val INITIAL_DONE = intPreferencesKey("initial_done")
+        // 可空字段：键不存在 = null（旧算法），存在 = 新计划起点量
+        val PLAN_START_DONE = intPreferencesKey("plan_start_done")
         val DAILY_WORDS = intPreferencesKey("daily_words")
         val EXAM_DATE = stringPreferencesKey("exam_date")
         val RATE_CHANGES_JSON = stringPreferencesKey("rate_changes_json")
@@ -54,6 +56,7 @@ class VocabConfigStore(
             startDate = prefs[Keys.START_DATE] ?: defaults.startDate,
             totalWords = prefs[Keys.TOTAL_WORDS] ?: defaults.totalWords,
             initialDone = prefs[Keys.INITIAL_DONE] ?: defaults.initialDone,
+            planStartDone = prefs[Keys.PLAN_START_DONE],
             dailyWords = prefs[Keys.DAILY_WORDS] ?: defaults.dailyWords,
             examDate = prefs[Keys.EXAM_DATE] ?: defaults.examDate,
             rateChanges = rateChanges,
@@ -77,6 +80,11 @@ class VocabConfigStore(
             prefs[Keys.START_DATE] = config.startDate
             prefs[Keys.TOTAL_WORDS] = config.totalWords
             prefs[Keys.INITIAL_DONE] = config.initialDone
+            if (config.planStartDone != null) {
+                prefs[Keys.PLAN_START_DONE] = config.planStartDone
+            } else {
+                prefs.remove(Keys.PLAN_START_DONE)
+            }
             prefs[Keys.DAILY_WORDS] = config.dailyWords
             prefs[Keys.EXAM_DATE] = config.examDate
             prefs[Keys.RATE_CHANGES_JSON] = rateChangesJsonStr

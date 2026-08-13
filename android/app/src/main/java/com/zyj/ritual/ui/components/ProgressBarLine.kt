@@ -1,6 +1,8 @@
 package com.zyj.ritual.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -11,13 +13,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualMotion
+import kotlin.math.abs
 
 
 /**
@@ -37,6 +44,8 @@ fun ProgressBarLine(
     height: Dp = 8.dp,
     trackColor: Color = RitualColors.onBg.copy(alpha = 0.09f),
     animate: Boolean = true,
+    durationMillis: Int = RitualMotion.barDuration,
+    pulseOnFinish: Boolean = false,
 ) {
     val target = ratio.coerceIn(0f, 1f)
     // 首次组合时 animateFloatAsState 直接就是目标值（只有后续变化才补间），
@@ -45,15 +54,32 @@ fun ProgressBarLine(
         animateFloatAsState(
             targetValue = target,
             animationSpec = tween(
-                durationMillis = RitualMotion.barDuration,
+                durationMillis = durationMillis,
                 easing = RitualMotion.standardEasing,
             ),
             label = "progress",
         ).value
     } else target
 
+    // 轻脉冲：只在到达目标后脉冲一次。首帧不算，避免截图测试和初始渲染也跳一下。
+    val scale = remember { Animatable(1f) }
+    val firstFrame = remember { mutableStateOf(true) }
+    LaunchedEffect(shown, target) {
+        val reached = if (animate) abs(shown - target) < 0.0005f else true
+        if (pulseOnFinish && reached) {
+            if (firstFrame.value) {
+                firstFrame.value = false
+            } else if (target > 0f) {
+                scale.snapTo(1f)
+                scale.animateTo(1.045f, animationSpec = tween(130, easing = FastOutSlowInEasing))
+                scale.animateTo(1f, animationSpec = tween(260, easing = FastOutSlowInEasing))
+            }
+        }
+    }
+
     Box(
         modifier = modifier
+            .scale(scale.value)
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(999.dp))

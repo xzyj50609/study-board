@@ -205,15 +205,26 @@ object VocabCalculator {
         val newWords = sumNewWords(safeRecords)
         val doneWords = min(cfg.initialDone + newWords, cfg.totalWords)
 
-        // 计划线：从起点起逐日累加当天的额度，夹到词书总量
+        // 计划线的起点与起点量（planStartDone 把历史进度与当前计划解耦）：
+        // 非空 → 从第一条 rateChange 的生效日起、以 planStartDone 为起点量起算；
+        // 为空 → 旧算法：initialDone + 最早记录日。
+        // doneWords（真实进度）不受影响，历史新词永远全算。
+        val planStartEpoch = if (cfg.planStartDone != null) {
+            normalizeRateChanges(cfg).firstOrNull()?.let { toEpochDay(it.from) } ?: startEpoch
+        } else {
+            startEpoch
+        }
+        val planBaseDone = cfg.planStartDone ?: cfg.initialDone
+
+        // 计划线：从计划起点起逐日累加当天的额度，夹到词书总量
         val dueWords = min(
-            cfg.initialDone + plannedWordsInRange(cfg, startEpoch, todayEpoch),
+            planBaseDone + plannedWordsInRange(cfg, planStartEpoch, todayEpoch),
             cfg.totalWords
         )
 
         // 计划完成日
-        val planDays = max(1, daysToAccumulate(cfg, startEpoch, cfg.totalWords - cfg.initialDone))
-        val planFinishDate = fromEpochDay(startEpoch + planDays - 1)
+        val planDays = max(1, daysToAccumulate(cfg, planStartEpoch, cfg.totalWords - planBaseDone))
+        val planFinishDate = fromEpochDay(planStartEpoch + planDays - 1)
 
         val todayWords = safeRecords
             .filter { it.kind != "backlog" && it.date == todayStr }

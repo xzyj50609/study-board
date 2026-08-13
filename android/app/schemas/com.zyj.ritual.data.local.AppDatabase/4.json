@@ -1,0 +1,199 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "506a05db12e4fb65e7e6542de04a76e7",
+    "entities": [
+      {
+        "tableName": "task_record",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `articleIndex` INTEGER NOT NULL, `taskIndex` INTEGER NOT NULL, `completedAt` TEXT, `plannedDate` TEXT, `source` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "articleIndex",
+            "columnName": "articleIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "taskIndex",
+            "columnName": "taskIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "plannedDate",
+            "columnName": "plannedDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "history_event",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `at` TEXT NOT NULL, `type` TEXT NOT NULL, `articleIndex` INTEGER, `taskIndex` INTEGER, `taskName` TEXT, `note` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "at",
+            "columnName": "at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "articleIndex",
+            "columnName": "articleIndex",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "taskIndex",
+            "columnName": "taskIndex",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "taskName",
+            "columnName": "taskName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "vocab_record",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `words` INTEGER NOT NULL, `kind` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "words",
+            "columnName": "words",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "paper_session",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `completedDate` TEXT NOT NULL, `partsCount` INTEGER NOT NULL, `digestionDays` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedDate",
+            "columnName": "completedDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "partsCount",
+            "columnName": "partsCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "digestionDays",
+            "columnName": "digestionDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '506a05db12e4fb65e7e6542de04a76e7')"
+    ]
+  }
+}

@@ -1,5 +1,7 @@
 package com.zyj.ritual.ui.screens.today
 
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +35,7 @@ import com.zyj.ritual.ui.components.ProgressBarLine
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualRadius
 import com.zyj.ritual.ui.theme.RitualTypography
+import kotlinx.coroutines.delay
 
 @Composable
 fun VocabTodayCard(
@@ -47,6 +55,26 @@ fun VocabTodayCard(
         totalWords = total,
         finished = state.finished,
     )
+    val animatedPercent by animateIntAsState(
+        targetValue = percent,
+        animationSpec = tween(durationMillis = 1400),
+        label = "vocabPercent",
+    )
+    val animatedToday by animateIntAsState(
+        targetValue = state.todayWords,
+        animationSpec = tween(durationMillis = 1400),
+        label = "vocabToday",
+    )
+    var lastTodayWords by remember { mutableStateOf(state.todayWords) }
+    var newDelta by remember { mutableStateOf(0) }
+    LaunchedEffect(state.todayWords) {
+        if (state.todayWords > lastTodayWords) {
+            newDelta = state.todayWords - lastTodayWords
+            delay(1400)
+            newDelta = 0
+        }
+        lastTodayWords = state.todayWords
+    }
     // 打卡量跟着今天的状态走，不硬编码 20。今天要复习 45 个却只能一次点 +20，
     // 「定了多少 → 我完成了」这条路径就走不完
     val newAmount = state.todayQuota.coerceAtLeast(1)
@@ -102,16 +130,25 @@ fun VocabTodayCard(
             ) {
                 Column {
                     Text(
-                        text = "今天已背 ${state.todayWords} / ${state.todayQuota} 词",
+                        text = "今天已背 $animatedToday / ${state.todayQuota} 词",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = RitualColors.onBg
                     )
+                    if (newDelta > 0) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "+$newDelta 新词",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RitualColors.accentGold,
+                        )
+                    }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         // 「已完成百分之多少」当主角，「还要学」退成副信息。
                         // 只说「剩 1503 词」的时候看着永远遥遥无期，看不到自己在推进
-                        text = "已背 $percent% · 还要学 ${state.remainWords} 词",
+                        text = "已背 $animatedPercent% · 还要学 ${state.remainWords} 词",
                         fontSize = 12.sp,
                         color = RitualColors.onBgMuted
                     )
@@ -141,6 +178,8 @@ fun VocabTodayCard(
                 ratio = if (total > 0) state.doneWords.toFloat() / total else 0f,
                 color = RitualColors.accentGold,
                 height = 10.dp,
+                durationMillis = 1400,
+                pulseOnFinish = true,
             )
 
             Spacer(modifier = Modifier.height(16.dp))

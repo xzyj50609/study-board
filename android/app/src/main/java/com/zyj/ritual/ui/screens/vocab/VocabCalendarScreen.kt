@@ -1,5 +1,7 @@
 package com.zyj.ritual.ui.screens.vocab
 
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -86,6 +88,7 @@ fun VocabCalendarScreen(
                 onAddWords = { words -> viewModel.addRecord(words, "new") },
                 onAddReview = { words -> viewModel.addRecord(words, "backlog") },
                 onSaveReviewDue = { due -> viewModel.saveReviewDue(due) },
+                onOpenSettings = onNavigateToSetup,
             )
         }
     }
@@ -97,6 +100,7 @@ fun VocabCalendarScreenContent(
     onAddWords: (Int) -> Unit = {},
     onAddReview: (Int) -> Unit = {},
     onSaveReviewDue: (Int) -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val state = aggregate.state
     val calendar = aggregate.calendar
@@ -111,6 +115,23 @@ fun VocabCalendarScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // 背词设置入口
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Text(
+                    text = "背词设置 ›",
+                    fontSize = 13.sp,
+                    color = RitualColors.accentInk,
+                    modifier = Modifier
+                        .clickable { onOpenSettings() }
+                        .padding(4.dp),
+                )
+            }
+
             // 顶栏：已背进度条 + 百分比 + 计划/预计口径
             VocabHeaderCard(
                 state = state,
@@ -266,6 +287,23 @@ fun VocabHeaderCard(
     examDate: String,
     modifier: Modifier = Modifier
 ) {
+    val totalWords = state.doneWords + state.remainWords
+    val percent = VocabCalculator.donePercent(
+        doneWords = state.doneWords,
+        totalWords = totalWords,
+        finished = state.finished,
+    )
+    val animatedDone by animateIntAsState(
+        targetValue = state.doneWords,
+        animationSpec = tween(durationMillis = 1400),
+        label = "vocabDone",
+    )
+    val animatedPercent by animateIntAsState(
+        targetValue = percent,
+        animationSpec = tween(durationMillis = 1400),
+        label = "vocabPercent",
+    )
+
     Card(
         colors = CardDefaults.cardColors(containerColor = RitualColors.surface),
         shape = RoundedCornerShape(16.dp),
@@ -289,13 +327,13 @@ fun VocabHeaderCard(
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = "${state.doneWords}",
+                        text = "$animatedDone",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = RitualColors.onBg
                     )
                     Text(
-                        text = " / ${state.doneWords + state.remainWords}",
+                        text = " / $totalWords",
                         fontSize = 16.sp,
                         color = RitualColors.onBgMuted,
                         modifier = Modifier.padding(bottom = 4.dp)
@@ -320,11 +358,13 @@ fun VocabHeaderCard(
             // 已背进度条。用户点名要这条——「还剩 1503 个」和「完成 20%」
             // 讲的是同一件事，但心理感觉截然不同
             ProgressBarLine(
-                ratio = if (state.doneWords + state.remainWords > 0) {
-                    state.doneWords.toFloat() / (state.doneWords + state.remainWords)
+                ratio = if (totalWords > 0) {
+                    state.doneWords.toFloat() / totalWords
                 } else 0f,
                 color = RitualColors.accentGold,
                 height = 14.dp,
+                durationMillis = 1400,
+                pulseOnFinish = true,
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -337,13 +377,7 @@ fun VocabHeaderCard(
                 // 百分比是这条的主角，字号压过右边的「还要学」。
                 // 算法只有 VocabCalculator.donePercent 一处，进度页摘要卡调的是同一个函数
                 Text(
-                    text = "${
-                        VocabCalculator.donePercent(
-                            doneWords = state.doneWords,
-                            totalWords = state.doneWords + state.remainWords,
-                            finished = state.finished,
-                        )
-                    }%",
+                    text = "$animatedPercent%",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = RitualColors.accentGold,

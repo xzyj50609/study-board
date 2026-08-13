@@ -30,6 +30,7 @@ data class BackupFile(
     val history: List<BackupHistoryEvent>,
     val vocabConfig: BackupVocabConfig? = null,
     val vocabRecords: List<BackupVocabRecord>? = null,
+    val paperSessions: List<BackupPaperSession> = emptyList(),
 ) {
     fun toDomain(): ExportData = ExportData(
         plan = plan.toDomain(),
@@ -38,6 +39,7 @@ data class BackupFile(
         exportedAt = Instant.parse(exportedAt),
         vocabConfig = vocabConfig?.toDomain(),
         vocabRecords = vocabRecords?.map { it.toDomain() },
+        paperSessions = paperSessions.map { it.toDomain() },
     )
 
     companion object {
@@ -53,6 +55,7 @@ data class BackupFile(
                 history = data.history.map { BackupHistoryEvent.fromDomain(it) },
                 vocabConfig = BackupVocabConfig.fromDomain(data.vocabConfig),
                 vocabRecords = data.vocabRecords.map { BackupVocabRecord.fromDomain(it) },
+                paperSessions = data.paperSessions.map { BackupPaperSession.fromDomain(it) },
             )
         }
 
@@ -162,6 +165,8 @@ data class BackupVocabConfig(
     val startDate: String,
     val totalWords: Int,
     val initialDone: Int,
+    /** 新计划起点量；null = 旧算法（与 v0.9 前的老备份兼容） */
+    val planStartDone: Int? = null,
     val dailyWords: Int,
     val examDate: String,
     val rateChanges: List<BackupRateChange> = emptyList(),
@@ -177,6 +182,7 @@ data class BackupVocabConfig(
         startDate = startDate,
         totalWords = totalWords,
         initialDone = initialDone,
+        planStartDone = planStartDone,
         dailyWords = dailyWords,
         examDate = examDate,
         rateChanges = rateChanges.map { it.toDomain() },
@@ -194,6 +200,7 @@ data class BackupVocabConfig(
             startDate = cfg.startDate,
             totalWords = cfg.totalWords,
             initialDone = cfg.initialDone,
+            planStartDone = cfg.planStartDone,
             dailyWords = cfg.dailyWords,
             examDate = cfg.examDate,
             rateChanges = cfg.rateChanges.map { BackupRateChange.fromDomain(it) },
@@ -231,6 +238,33 @@ data class BackupVocabRecord(
     companion object {
         fun fromDomain(r: VocabRecord): BackupVocabRecord =
             BackupVocabRecord(r.date, r.words, r.kind, r.createdAt)
+    }
+}
+
+@Serializable
+data class BackupPaperSession(
+    val name: String,
+    val completedDate: String,   // ISO LocalDate
+    val partsCount: Int = PaperSession.PARTS_COUNT,
+    val digestionDays: Int = PaperSession.DIGESTION_DAYS,
+    val createdAt: String,       // ISO Instant
+) {
+    fun toDomain(): PaperSession = PaperSession(
+        name = name,
+        completedDate = LocalDate.parse(completedDate),
+        partsCount = partsCount,
+        digestionDays = digestionDays,
+        createdAt = Instant.parse(createdAt),
+    )
+
+    companion object {
+        fun fromDomain(s: PaperSession): BackupPaperSession = BackupPaperSession(
+            name = s.name,
+            completedDate = s.completedDate.toString(),
+            partsCount = s.partsCount,
+            digestionDays = s.digestionDays,
+            createdAt = s.createdAt.toString(),
+        )
     }
 }
 

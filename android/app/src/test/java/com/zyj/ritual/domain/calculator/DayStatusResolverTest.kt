@@ -141,4 +141,15 @@ class DayStatusResolverTest {
         }
         assertEquals(CalendarCellStatus.FUTURE_ADVANCED, resolve(future, records))
     }
+
+    // ——— 消化期 ——
+
+    @Test
+    fun `消化日返回DIGESTION且优先于其他判定`() {
+        val paused = setOf(today)
+        val status = DayStatusResolver.resolve(
+            plan, cal, emptyList(), today, today, CreditState.EVEN, paused
+        )
+        assertEquals(CalendarCellStatus.DIGESTION, status)
+    }
 }

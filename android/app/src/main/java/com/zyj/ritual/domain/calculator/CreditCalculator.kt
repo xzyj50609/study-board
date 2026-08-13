@@ -20,11 +20,13 @@ object CreditCalculator {
         calendar: PlanCalendar,
         records: List<TaskRecord>,
         today: LocalDate,
+        pausedDates: Set<LocalDate> = emptySet(),
     ): CreditResult {
         if (today < plan.planStartDate) {
             // 计划还没开始
             val remaining = plan.totalTasks - records.size
-            val eta = today.plusDays(((remaining + plan.tasksPerDay - 1) / plan.tasksPerDay).toLong())
+            val etaDays = (remaining + plan.tasksPerDay - 1) / plan.tasksPerDay
+            val eta = addDaysSkippingPaused(today, etaDays, pausedDates)
             return CreditResult(
                 creditTasks = 0,
                 creditDays = 0.0,
@@ -57,9 +59,9 @@ object CreditCalculator {
         val totalTasks = plan.totalTasks
         val remaining = (totalTasks - records.size).coerceAtLeast(0)
 
-        // 预计完成日 = 今天 + ceil(剩余 / 每日)（R17）
+        // 预计完成日 = 今天 + ceil(剩余 / 每日)，途中跳过消化期等暂停日（R17 + 顺延）
         val etaDays = if (remaining == 0) 0 else (remaining + plan.tasksPerDay - 1) / plan.tasksPerDay
-        val expectedCompletionDate = today.plusDays(etaDays.toLong())
+        val expectedCompletionDate = addDaysSkippingPaused(today, etaDays, pausedDates)
 
         // 最早缺口日期（R16）：从计划开始日正向扫描，第一个没做完的过去计划日
         val earliestDeficitDate = if (state == CreditState.DEFICIT) {
@@ -131,6 +133,24 @@ object CreditCalculator {
     }
 
     // ———————————— 内部 ————————————
+
+    /**
+     * 从 from 起往后数 days 个非暂停日（from 当天不计）。
+     * 消化期内的日子不占预计完成日的天数——整卷换来的休整是真休整，
+     * 不能一边暂停一边让预计完成日照常逼近。
+     */
+    private fun addDaysSkippingPaused(from: LocalDate, days: Int, paused: Set<LocalDate>): LocalDate {
+        if (days <= 0) return from
+        var d = from
+        var left = days
+        var guard = 0
+        while (left > 0) {
+            d = d.plusDays(1)
+            if (d !in paused) left--
+            if (++guard > 20_000) break  // 防御：理论上不会
+        }
+        return d
+    }
 
     /**
      * 从计划开始日正向扫描，找第一个"当日计划的项没有全部完成"的过去计划日。

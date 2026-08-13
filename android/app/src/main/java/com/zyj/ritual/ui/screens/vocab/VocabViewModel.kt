@@ -46,4 +46,25 @@ class VocabViewModel(
             vocabRepository.saveReviewDue(due)
         }
     }
+
+    /** 保存背词设置；计划起算日非空时自动把计划线校准到那天。 */
+    fun saveSetup(
+        bookName: String,
+        totalWords: Int,
+        initialDone: Int,
+        dailyWords: Int,
+        examDate: String,
+        planStartDate: String?,
+    ) {
+        viewModelScope.launch {
+            vocabRepository.saveSetup(
+                bookName = bookName,
+                totalWords = totalWords,
+                initialDone = initialDone,
+                dailyWords = dailyWords,
+                examDate = examDate,
+                planStartDate = planStartDate,
+            )
+        }
+    }
 }

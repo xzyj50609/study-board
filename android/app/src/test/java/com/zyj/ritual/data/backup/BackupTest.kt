@@ -4,8 +4,10 @@ import com.zyj.ritual.data.repository.ExportData
 import com.zyj.ritual.domain.model.HistoryEvent
 import com.zyj.ritual.domain.model.HistoryEventType
 import com.zyj.ritual.domain.model.Plan
+import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
+import com.zyj.ritual.domain.vocab.RateChange
 import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.domain.vocab.VocabRecord
 import kotlinx.serialization.json.Json
@@ -138,6 +140,41 @@ class BackupTest {
         assertEquals(20, records[0].words)
         assertEquals("new", records[0].kind)
         assertEquals("backlog", records[1].kind)
+    }
+
+    @Test
+    fun `backup roundtrip preserves planStartDone and paper sessions`() {
+        val data = sampleExportData(
+            vocabConfig = VocabConfig(
+                totalWords = 2416,
+                initialDone = 380,
+                dailyWords = 40,
+                rateChanges = listOf(RateChange("2026-08-02", 40)),
+                planStartDone = 420,
+            ),
+            vocabRecords = listOf(VocabRecord("2026-08-13", 40, "new")),
+        ).copy(
+            paperSessions = listOf(
+                PaperSession(
+                    name = "2016 年卷",
+                    completedDate = LocalDate.parse("2026-08-13"),
+                    partsCount = 7,
+                    digestionDays = 4,
+                    createdAt = Instant.parse("2026-08-13T14:00:00Z"),
+                )
+            ),
+        )
+
+        val decoded = BackupSerializer.decode(BackupSerializer.encode(data))
+
+        assertEquals(420, decoded.vocabConfig?.planStartDone)
+        assertEquals(listOf(RateChange("2026-08-02", 40)), decoded.vocabConfig?.rateChanges)
+        assertEquals(1, decoded.paperSessions.size)
+        assertEquals("2016 年卷", decoded.paperSessions[0].name)
+        assertEquals(LocalDate.parse("2026-08-13"), decoded.paperSessions[0].completedDate)
+        assertEquals(7, decoded.paperSessions[0].partsCount)
+        assertEquals(4, decoded.paperSessions[0].digestionDays)
+        assertEquals(Instant.parse("2026-08-13T14:00:00Z"), decoded.paperSessions[0].createdAt)
     }
 
     private fun sampleExportData(

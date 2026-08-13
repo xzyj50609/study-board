@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.zyj.ritual.core.time.BeijingClock
 import com.zyj.ritual.data.local.AppDatabase
 import com.zyj.ritual.data.local.entity.HistoryEventEntity
+import com.zyj.ritual.data.local.entity.PaperSessionEntity
 import com.zyj.ritual.data.local.entity.TaskRecordEntity
 import com.zyj.ritual.data.local.entity.VocabRecordEntity
 import com.zyj.ritual.data.store.PlanStore
@@ -24,6 +25,7 @@ class BackupRepository(
     private val taskDao = db.taskRecordDao()
     private val historyDao = db.historyEventDao()
     private val vocabDao = db.vocabRecordDao()
+    private val paperSessionDao = db.paperSessionDao()
 
     suspend fun exportAll(): ExportData {
         val plan = planStore.getPlan() ?: error("Plan not set up, cannot export")
@@ -34,6 +36,7 @@ class BackupRepository(
             exportedAt = clock.now(),
             vocabConfig = vocabConfigStore.getConfig(),
             vocabRecords = vocabDao.getAll().map { it.toDomain() },
+            paperSessions = paperSessionDao.getAll().map { it.toDomain() },
         )
     }
 
@@ -47,8 +50,10 @@ class BackupRepository(
         db.withTransaction {
             taskDao.deleteAll()
             historyDao.deleteAll()
+            paperSessionDao.deleteAll()
             taskDao.insertAll(data.records.map { TaskRecordEntity.fromDomain(it) })
             historyDao.insertAll(data.history.map { HistoryEventEntity.fromDomain(it) })
+            paperSessionDao.insertAll(data.paperSessions.map { PaperSessionEntity.fromDomain(it) })
 
             if (hasVocabRecords) {
                 vocabDao.deleteAll()

@@ -62,11 +62,20 @@ interface PlanCalendar {
     fun taskToPlanDayIndex(articleIndex: Int, taskIndex: Int): Int
 
     companion object {
-        fun create(plan: Plan): PlanCalendar = PlanCalendarImpl(plan)
+        /**
+         * @param pausedDates 消化期等暂停日（来自整套卷，见 DigestionCalculator）。
+         * 暂停日不是计划日：不排任务、不计欠账，计划日序号 ↔ 自然日的映射整体后移。
+         * 默认空集 = 老行为，逐日连续。
+         */
+        fun create(plan: Plan, pausedDates: Set<LocalDate> = emptySet()): PlanCalendar =
+            PlanCalendarImpl(plan, pausedDates)
     }
 }
 
-private class PlanCalendarImpl(private val plan: Plan) : PlanCalendar {
+private class PlanCalendarImpl(
+    private val plan: Plan,
+    private val pausedDates: Set<LocalDate> = emptySet(),
+) : PlanCalendar {
 
     override fun getPlanDay(planDayIndex: Int): DayPlan? {
         if (planDayIndex < 0) return null
@@ -100,9 +109,10 @@ private class PlanCalendarImpl(private val plan: Plan) : PlanCalendar {
 
     override fun dateToPlanDayIndex(date: LocalDate): Int? {
         if (date < plan.planStartDate) return null
+        if (date in pausedDates) return null  // 消化日不排计划
 
         // 第一版：studyWeekdays 永远是全选七天，计划日 = 自然日
-        // 但为了以后加休息日，这里统一按 studyWeekdays 数
+        // 但为了以后加休息日，这里统一按 studyWeekdays 数；暂停日同样不算学习日
         val days = countStudyDaysBetween(plan.planStartDate, date)
         val index = days - 1  // 开始日那天是第 0 个计划日
 
@@ -118,13 +128,19 @@ private class PlanCalendarImpl(private val plan: Plan) : PlanCalendar {
     override fun planDayIndexToDate(planDayIndex: Int): LocalDate? {
         if (planDayIndex < 0) return null
 
-        // 第一版：自然日一一对应
+        // 第一版：自然日一一对应（跳过非学习日与暂停日）
         // 有休息日后这里要从 planStartDate 往后数 planDayIndex 个学习日
         var date = plan.planStartDate
+        // 开始日若恰逢暂停日，先滑到第一个学习日，保持与 dateToPlanDayIndex 互逆
+        var guard = 0
+        while (!isStudyDay(date)) {
+            date = date.plusDays(1)
+            if (++guard > 10_000) return null
+        }
         var count = 0
         while (count < planDayIndex) {
             date = date.plusDays(1)
-            if (date.dayOfWeek in plan.studyWeekdays) {
+            if (isStudyDay(date)) {
                 count++
             }
             // 防无限循环（理论上不会）
@@ -158,8 +174,12 @@ private class PlanCalendarImpl(private val plan: Plan) : PlanCalendar {
 
     // ———————————— 内部 ————————————
 
+    /** 学习日 = 在 studyWeekdays 里 且 不是消化期等暂停日 */
+    private fun isStudyDay(date: LocalDate): Boolean =
+        date.dayOfWeek in plan.studyWeekdays && date !in pausedDates
+
     /**
-     * 计算 [start, end] 闭区间内的学习日数量。
+     * 计算 [start, end] 闭区间内的学习日数量（暂停日不算）。
      */
     private fun countStudyDaysBetween(start: LocalDate, end: LocalDate): Int {
         if (end < start) return 0
@@ -167,7 +187,7 @@ private class PlanCalendarImpl(private val plan: Plan) : PlanCalendar {
         var count = 0
         var date = start
         while (!date.isAfter(end)) {
-            if (date.dayOfWeek in plan.studyWeekdays) {
+            if (isStudyDay(date)) {
                 count++
             }
             date = date.plusDays(1)

@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.zyj.ritual.RitualApp
+import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.ui.screens.article.ArticleScreen
 import com.zyj.ritual.ui.screens.calendar.CalendarScreen
 import com.zyj.ritual.ui.screens.history.HistoryScreen
@@ -23,6 +24,7 @@ import com.zyj.ritual.ui.screens.setup.SetupScreen
 import com.zyj.ritual.ui.screens.setup.SetupViewModel
 import com.zyj.ritual.ui.screens.today.TodayScreen
 import com.zyj.ritual.ui.screens.today.TodayViewModel
+import com.zyj.ritual.ui.screens.vocab.VocabSetupScreen
 import com.zyj.ritual.ui.state.RitualStateHost
 
 /**
@@ -34,6 +36,7 @@ object Routes {
     const val CALENDAR = "calendar"
     const val PROGRESS = "progress"
     const val VOCAB = "vocab"
+    const val VOCAB_SETUP = "vocab_setup"
     const val SETTINGS = "settings"
     const val HISTORY = "history"
     const val ARTICLE = "article/{articleIndex}"
@@ -86,6 +89,10 @@ fun RitualNavGraph(
                     vocabState = vocabState,
                     onAddVocabWords = { words -> todayViewModel.addVocabRecord(words, "new") },
                     onAddVocabReview = { words -> todayViewModel.addVocabRecord(words, "backlog") },
+                    onRegisterPaperSession = { name ->
+                        todayViewModel.registerPaperSession(name, app.clock.today())
+                    },
+                    onUndoPaperSession = { id -> todayViewModel.undoPaperSession(id) },
                     onOpenVocabBoard = {
                         navController.navigate(Routes.VOCAB) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -156,7 +163,19 @@ fun RitualNavGraph(
             })
             com.zyj.ritual.ui.screens.vocab.VocabCalendarScreen(
                 viewModel = vm,
-                onNavigateToSetup = { goToSetup() },
+                onNavigateToSetup = { navController.navigate(Routes.VOCAB_SETUP) },
+            )
+        }
+
+        // 背词设置（此前是孤儿屏，现在补上入口）
+        composable(Routes.VOCAB_SETUP) {
+            val config by app.vocabRepository.configFlow()
+                .collectAsStateWithLifecycle(initialValue = VocabConfig())
+            VocabSetupScreen(
+                currentConfig = config,
+                vocabRepository = app.vocabRepository,
+                onSaved = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
             )
         }
 

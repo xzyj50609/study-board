@@ -318,7 +318,7 @@ private fun CalendarCell(
     vocabDay: VocabCalendarCell.Day?,
     onClick: () -> Unit,
 ) {
-    val status = remember(date, state.records, state.today, state.credit.state) {
+    val status = remember(date, state.records, state.today, state.credit.state, state.pausedDates) {
         com.zyj.ritual.domain.calculator.DayStatusResolver.resolve(
             state.plan,
             state.calendar,
@@ -326,6 +326,7 @@ private fun CalendarCell(
             date,
             state.today,
             state.credit.state,
+            state.pausedDates,
         )
     }
     val dayPlan = state.calendar.getDayPlan(date)
@@ -336,6 +337,7 @@ private fun CalendarCell(
         CalendarCellStatus.PAST_COVERED -> RitualColors.accentGold.copy(alpha = 0.08f)
         CalendarCellStatus.PAST_ADVANCED, CalendarCellStatus.FUTURE_ADVANCED -> RitualColors.accentGold.copy(alpha = 0.15f)
         CalendarCellStatus.PAST_BACKFILL -> RitualColors.accentInk.copy(alpha = 0.08f)
+        CalendarCellStatus.DIGESTION -> RitualColors.accentGold.copy(alpha = 0.10f)
         else -> Color.Transparent
     }
 
@@ -344,6 +346,7 @@ private fun CalendarCell(
         CalendarCellStatus.PAST_DEFICIT -> RitualColors.warn.copy(alpha = 0.5f)
         CalendarCellStatus.PAST_ADVANCED, CalendarCellStatus.FUTURE_ADVANCED -> RitualColors.accentGold
         CalendarCellStatus.PAST_BACKFILL -> RitualColors.accentInk
+        CalendarCellStatus.DIGESTION -> RitualColors.accentGold.copy(alpha = 0.45f)
         else -> Color.Transparent
     }
 
@@ -360,6 +363,7 @@ private fun CalendarCell(
         CalendarCellStatus.PAST_DEFICIT -> RitualColors.warn
         CalendarCellStatus.FUTURE_PLANNED -> RitualColors.onBgFaint
         CalendarCellStatus.FUTURE_ADVANCED -> RitualColors.accentGold
+        CalendarCellStatus.DIGESTION -> RitualColors.accentGold
     }
 
     val textColor = when (status) {

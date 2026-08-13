@@ -77,6 +77,8 @@ fun HistoryEventType.label(): String = when (this) {
     HistoryEventType.UNDO_ARTICLE -> "撤销整篇"
     HistoryEventType.RESCHEDULE -> "排期"
     HistoryEventType.IMPORT -> "导入"
+    HistoryEventType.PAPER_SESSION -> "整套卷"
+    HistoryEventType.PAPER_SESSION_UNDO -> "撤销整套卷"
 }
 
 /**

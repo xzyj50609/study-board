@@ -176,6 +176,17 @@ class CreditCalculatorTest {
         assertEquals(today.plusDays(60), credit.expectedCompletionDate)
     }
 
+    @Test
+    fun `R17 预计完成日跳过消化日`() {
+        val today = startDate
+        val records = importedRecords()
+        val paused = setOf(today.plusDays(10))
+        val pausedCal = PlanCalendar.create(plan, paused)
+        val credit = CreditCalculator.calculate(plan, pausedCal, records, today, paused)
+        // 剩余 180 项 / 3 = 60 天，但第 10 天是暂停日 → 顺延 1 天
+        assertEquals(today.plusDays(61), credit.expectedCompletionDate)
+    }
+
     // ——— R18：基础计划完成日 ———
 
     @Test
