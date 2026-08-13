@@ -2,6 +2,7 @@ package com.zyj.ritual.domain.calculator
 
 import com.zyj.ritual.domain.calendar.PlanCalendar
 import com.zyj.ritual.domain.model.Plan
+import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.PrimaryButtonTarget
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
@@ -142,5 +143,21 @@ class TodayCopyResolverTest {
         val target = result.primaryButtonTarget as PrimaryButtonTarget.CheckTask
         assertEquals(13, target.articleIndex)
         assertEquals(1, target.taskIndex)
+    }
+
+    @Test
+    fun `消化日标题与提示认账 不催进度`() {
+        val paper = PaperSession(
+            name = "2016 年卷",
+            completedDate = startDate,
+            createdAt = Instant.parse("2026-08-05T10:00:00Z"),
+        )
+        val records = imported()
+        val progress = ProgressCalculator.calculate(plan, records)
+        val credit = CreditCalculator.calculate(plan, cal, records, startDate)
+        val result = TodayCopyResolver.resolve(plan, cal, records, progress, credit, startDate, paper)
+
+        assertEquals("消化日 · 2016 年卷", result.headline)
+        assertTrue(result.digestionNote!!.contains("剩余阅读任务豁免"))
     }
 }

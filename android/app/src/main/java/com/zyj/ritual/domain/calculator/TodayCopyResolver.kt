@@ -32,12 +32,16 @@ object TodayCopyResolver {
         // 消化日：整卷换来的休整，标题直接认账，不用"第 N 篇还剩 X 项"催人
         if (todayPaper != null && !progress.isAllDone) {
             val dayIndex = DigestionCalculator.digestionDayIndex(todayPaper, today)
-            val totalDays = todayPaper.digestionDays + 1  // 完成当天 + 完整消化日
+            val note = if (dayIndex == 0) {
+                "今天登记整套卷 · 剩余阅读任务豁免，想提前学随时可以"
+            } else {
+                "消化日 $dayIndex/${todayPaper.digestionDays} · 休整不计欠账，想提前学随时可以"
+            }
             return TodayCopyResult(
                 headline = "消化日 · ${todayPaper.name}",
                 primaryButtonText = "继续学习",
                 primaryButtonTarget = PrimaryButtonTarget.StartNextArticle,
-                digestionNote = "消化日 $dayIndex/$totalDays · 休整不计欠账，想提前学随时可以",
+                digestionNote = note,
             )
         }
 
