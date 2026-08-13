@@ -116,14 +116,14 @@ class StudyRepositoryIntegrationTest {
     fun 备份导出再导入能还原全部数据() = runBlocking {
         env.repository.initialSetup(plan())
         env.repository.checkTask(13, 1, today, RecordSource.CHECKED)
-        val exported = env.repository.exportAll()
+        val exported = env.backupRepository.exportAll()
 
         // 清空后再导入
         env.db.taskRecordDao().deleteAll()
         env.db.historyEventDao().deleteAll()
         assertEquals(0, env.db.taskRecordDao().count())
 
-        env.repository.importAll(exported)
+        env.backupRepository.importAll(exported)
         val state = env.repository.todayStateFlow().first()!!
         assertEquals(73, state.records.size)
         assertEquals(exported.plan.totalArticles, state.plan.totalArticles)

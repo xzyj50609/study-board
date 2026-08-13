@@ -253,39 +253,6 @@ class StudyRepository(
                 .getOrNull()
         }
 
-    // ——— 备份恢复 ———
-
-    /**
-     * 获取全部数据（导出用）。
-     */
-    suspend fun exportAll(): ExportData {
-        val plan = planStore.getPlan()
-            ?: error("Plan not set up, cannot export")
-        val records = taskDao.getAll().map { it.toDomain() }
-        val history = historyDao.getAll().map { it.toDomain() }
-        return ExportData(
-            plan = plan,
-            records = records,
-            history = history,
-            exportedAt = clock.now(),
-        )
-    }
-
-    /**
-     * 整库替换恢复（导入用）。
-     * 事务内执行，出错不影响现有数据。
-     */
-    suspend fun importAll(data: ExportData) {
-        // Room KTX 的 withTransaction 是 suspend 函数，支持在 block 里调 suspend DAO 方法
-        db.withTransaction {
-            taskDao.deleteAll()
-            historyDao.deleteAll()
-            taskDao.insertAll(data.records.map { TaskRecordEntity.fromDomain(it) })
-            historyDao.insertAll(data.history.map { HistoryEventEntity.fromDomain(it) })
-        }
-        // 保存 Plan（DataStore 不在 Room 事务里，最后写）
-        planStore.savePlan(data.plan)
-    }
 }
 
 /**

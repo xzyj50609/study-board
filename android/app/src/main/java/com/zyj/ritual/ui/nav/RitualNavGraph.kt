@@ -162,7 +162,7 @@ fun RitualNavGraph(
 
         composable(Routes.SETTINGS) {
             val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
-                initializer { SettingsViewModel(app.repository, app.clock) }
+                initializer { SettingsViewModel(app.repository, app.backupRepository, app.clock) }
             })
             val settingsState by vm.state.collectAsStateWithLifecycle()
             RitualStateHost(uiState = uiState, onGoToSetup = { goToSetup() }) { state ->

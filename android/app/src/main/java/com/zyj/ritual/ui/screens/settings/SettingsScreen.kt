@@ -41,7 +41,6 @@ import com.zyj.ritual.ui.theme.RitualRadius
 import com.zyj.ritual.ui.theme.RitualSpace
 import com.zyj.ritual.ui.theme.RitualTypography
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
@@ -175,17 +174,8 @@ fun SettingsScreen(
                 if (!webDavConfig.isValid) {
                     return@withContext "请先配置坚果云账号与应用密码"
                 }
-                val app = context.applicationContext as com.zyj.ritual.RitualApp
-                val articleExport = settingsViewModel.exportData()
+                val fullExport = settingsViewModel.exportData()
                     ?: return@withContext "导出失败：没有可导出的数据"
-
-                val vocabConfig = app.vocabRepository.getConfig()
-                val vocabRecords = app.vocabRepository.recordsFlow().first()
-
-                val fullExport = articleExport.copy(
-                    vocabConfig = vocabConfig,
-                    vocabRecords = vocabRecords,
-                )
                 val json = BackupSerializer.encode(fullExport)
 
                 when (val res = com.zyj.ritual.data.backup.webdav.WebDavClient.uploadBackup(webDavConfig, json)) {
@@ -209,12 +199,6 @@ fun SettingsScreen(
                         try {
                             val data = BackupSerializer.decode(res.data)
                             val ok = settingsViewModel.importData(data)
-                            val app = context.applicationContext as com.zyj.ritual.RitualApp
-                            val vCfg = data.vocabConfig
-                            val vRecs = data.vocabRecords
-                            if (vCfg != null && vRecs != null) {
-                                app.vocabRepository.importBeiciData(vCfg, vRecs)
-                            }
                             if (ok) "云端备份恢复成功！" else "恢复失败"
                         } catch (e: Exception) {
                             "恢复失败：${e.message}"

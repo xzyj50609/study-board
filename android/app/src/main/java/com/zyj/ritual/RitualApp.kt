@@ -4,8 +4,10 @@ import android.app.Application
 import com.zyj.ritual.core.time.BeijingClock
 import com.zyj.ritual.core.time.SystemBeijingClock
 import com.zyj.ritual.data.local.AppDatabase
+import com.zyj.ritual.data.repository.BackupRepository
 import com.zyj.ritual.data.repository.StudyRepository
 import com.zyj.ritual.data.store.PlanStore
+import com.zyj.ritual.data.store.VocabConfigStore
 
 /**
  * Application 类。
@@ -21,6 +23,9 @@ class RitualApp : Application() {
     lateinit var vocabRepository: com.zyj.ritual.data.repository.VocabRepository
         private set
 
+    lateinit var backupRepository: BackupRepository
+        private set
+
     lateinit var clock: BeijingClock
         private set
 
@@ -31,12 +36,14 @@ class RitualApp : Application() {
         clock = SystemBeijingClock()
         val db = AppDatabase.getInstance(this)
         val planStore = PlanStore(this)
+        val vocabConfigStore = VocabConfigStore(this)
         repository = StudyRepository(db, planStore, clock)
         vocabRepository = com.zyj.ritual.data.repository.VocabRepository(
             db = db,
-            configStore = com.zyj.ritual.data.store.VocabConfigStore(this),
+            configStore = vocabConfigStore,
             clock = clock
         )
+        backupRepository = BackupRepository(db, planStore, vocabConfigStore, clock)
     }
 
     companion object {

@@ -27,8 +27,8 @@ ksp {
 // 而 gradle 里始终停在 0.3 —— 用户装上 v0.5.2，设置页一直念「夜读 v0.3 (3)」，
 // 他因此怀疑装的是不是旧包。设置页的版本号是「手机上跑的到底是不是当前源码」
 // 唯一的回答方式，它一旦不可信，后面所有真机验收都失去基准。
-val appVersionName = "0.8"
-val appVersionCode = 8
+val appVersionName = "0.9"
+val appVersionCode = 9
 val appDisplayName = "夜读"
 
 // Release 签名只从本机未跟踪的配置读取，密钥和密码永远不进入 Git 历史。
