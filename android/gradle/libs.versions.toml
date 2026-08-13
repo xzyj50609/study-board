@@ -1,0 +1,82 @@
+[versions]
+agp = "9.3.1"
+kotlin = "2.3.21"
+ksp = "2.3.11"
+kotlinxSerialization = "1.11.0"
+coroutines = "1.11.0"
+
+coreKtx = "1.19.0"
+splashscreen = "1.2.0"
+activityCompose = "1.13.0"
+lifecycle = "2.11.0"
+composeBom = "2026.06.01"
+navigation = "2.9.8"
+room = "2.8.4"
+datastore = "1.2.1"
+
+junit = "4.13.2"
+turbine = "1.2.1"
+
+# Robolectric：只进测试，不进 APK。
+# 加它的理由很具体——「勾了但没落盘」在本项目真实发生过（保存按钮没接线，
+# 单测全绿、构建成功、APK 能装能开，数据一次都没进库）。要拦住这类事故，
+# 就得让 Room 真的跑起来、写进真文件、关掉再打开还能读到。
+# 而 VocabRepository 吃的是具体的 AppDatabase 而不是 DAO 接口，没法用假对象绕开。
+# 2026-08-07 经用户确认后加入。
+robolectric = "4.16"
+androidxTestJunit = "1.2.1"
+espresso = "3.7.0"
+
+# 官方 Compose 截图测试插件。选它而不是 Roborazzi/Paparazzi 的理由：
+# 第一方、不引 Robolectric 那一大坨、用的就是项目本来就该有的 @Preview。
+# ⚠️ 还是 alpha，且版本号跟 AGP 强绑定（官方文档写的 alpha15 对的是 AGP 9.0.0-rc03，
+# 本项目 AGP 9.3.1 所以取了 Google Maven 上最新的 alpha16）。
+# 升 AGP 时这个也要跟着查一遍 https://dl.google.com/dl/android/maven2/com/android/compose/screenshot/com.android.compose.screenshot.gradle.plugin/maven-metadata.xml
+composeScreenshot = "0.0.1-alpha16"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestJunit" }
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+
+screenshot-validation-api = { group = "com.android.tools.screenshot", name = "screenshot-validation-api", version.ref = "composeScreenshot" }
+
+[plugins]
+# 注意：AGP 9 起 Kotlin 支持内置，这里刻意没有 org.jetbrains.kotlin.android，
+# 加回去会报 "The plugin is no longer required for Kotlin support since AGP 9.0"
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+compose-screenshot = { id = "com.android.compose.screenshot", version.ref = "composeScreenshot" }

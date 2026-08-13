@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name 不在这里定义。它由 app/build.gradle.kts 顶部的 appDisplayName
+         通过 resValue 生成，好让「桌面图标的名字」和「APK 文件名」共用同一个出处。
+         在这里加回 app_name 会导致资源重复定义，构建直接失败。 -->
+</resources>

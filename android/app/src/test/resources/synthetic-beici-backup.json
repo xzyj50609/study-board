@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "settings": {
+    "bookName": "Synthetic test vocabulary",
+    "startDate": "2026-01-01",
+    "totalWords": 2416,
+    "initialDone": 380,
+    "dailyWords": 20,
+    "examDate": "2026-12-19"
+  },
+  "records": [
+    { "date": "2026-01-01", "words": 20, "kind": "new" },
+    { "date": "2026-01-01", "words": 40, "kind": "backlog" },
+    { "date": "2026-01-01", "words": 40, "kind": "backlog" },
+    { "date": "2026-01-02", "words": 20, "kind": "new" },
+    { "date": "2026-01-02", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-02", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-02", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-03", "words": 20, "kind": "new" },
+    { "date": "2026-01-03", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-03", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-03", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-03", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-03", "words": 20, "kind": "backlog" },
+    { "date": "2026-01-04", "words": 76, "kind": "new" },
+    { "date": "2026-01-05", "words": 20, "kind": "new" },
+    { "date": "2026-01-06", "words": 20, "kind": "new" },
+    { "date": "2026-01-07", "words": 20, "kind": "new" },
+    { "date": "2026-01-08", "words": 20, "kind": "new" },
+    { "date": "2026-01-09", "words": 20, "kind": "new" },
+    { "date": "2026-01-10", "words": 20, "kind": "new" },
+    { "date": "2026-01-11", "words": 20, "kind": "new" },
+    { "date": "2026-01-12", "words": 20, "kind": "new" },
+    { "date": "2026-01-13", "words": 20, "kind": "new" },
+    { "date": "2026-01-14", "words": 20, "kind": "new" },
+    { "date": "2026-01-15", "words": 20, "kind": "new" },
+    { "date": "2026-01-16", "words": 20, "kind": "new" },
+    { "date": "2026-01-17", "words": 20, "kind": "new" },
+    { "date": "2026-01-18", "words": 20, "kind": "new" },
+    { "date": "2026-01-19", "words": 20, "kind": "new" },
+    { "date": "2026-01-20", "words": 20, "kind": "new" },
+    { "date": "2026-01-21", "words": 20, "kind": "new" },
+    { "date": "2026-01-22", "words": 20, "kind": "new" },
+    { "date": "2026-01-23", "words": 20, "kind": "new" },
+    { "date": "2026-01-24", "words": 20, "kind": "new" }
+  ]
+}
+

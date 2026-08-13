@@ -1,0 +1,310 @@
+{
+  "$meta": {
+    "name": "夜读 / Ritual",
+    "target": "Android · Jetpack Compose",
+    "density": "dp / sp",
+    "timezone": "Asia/Shanghai",
+    "updated": "2026-08-07"
+  },
+  "$colorNote": [
+    "2026-08-07：亮色定为出货配色（用户看过样张后拍板）。深色保留在代码里但不出货。",
+    "亮色不是深色取反算的。三处方向相反，机械取反必错：",
+    "  onAccent —— 深色下强调色浅、字要深；亮色下强调色深、字要白。",
+    "  warnText —— 深色下比 warn 亮；亮色下必须比 warn 暗。",
+    "  surfaceSel —— 深色下靠变亮表示陷下去；亮色下靠变暗。",
+    "还有一条不是反向而是不能照抄：亮色的次级/三级文字给实色不给透明度，",
+    "30% 的黑字压纸白上会糊。对比度按 13.7 : 6.9 : 4.2 三档拉开（对 bg 计算）。",
+    "代码里的对应物是 ui/theme/Color.kt 的 LightRitualColors / DarkRitualColors。",
+    "",
+    "2026-08-07 语义色表拍板（唯一权威，新看板不许自创颜色）：",
+    "  accentInk    按计划完成（含当天做完的）",
+    "  accentGold   提前做的 / 剩余额度 / 今天还有活 —— 金＝「你赚到的」",
+    "  accentReview 复习",
+    "  warn         欠着 / 缺口",
+    "  onBgFaint    未来计划日 / 还没开始",
+    "⚠️ 金的含义和背词指南灯现在是反的（那边金＝当天计划内背完了）。",
+    "   搬过来时重新上色：当天该背的背完＝蓝，额外多背的＝金，漏了＝铜。",
+    "⚠️ 指南灯原来的复习蓝 #4a86c4 不能直接搬，蓝已经给了「已完成」。"
+  ],
+  "colorLight": {
+    "bg": {
+      "value": "#EFEBE2",
+      "role": "页面底色 / Scaffold background（暖纸，不是纯白）"
+    },
+    "surface": {
+      "value": "#FFFFFF",
+      "role": "底部面板、弹窗、抬升面"
+    },
+    "surfaceLow": {
+      "value": "#FBF9F4",
+      "role": "卡片填充（比 bg 浅一档，和深色下「卡片比底亮」同一套语法）"
+    },
+    "surfaceSel": {
+      "value": "#E8E2D5",
+      "role": "选中日格 / 状态标签底（靠变暗，方向与深色相反）"
+    },
+    "onBg": {
+      "value": "#1D2026",
+      "role": "主文字（深墨）· 对 bg 13.7:1"
+    },
+    "onBgMuted": {
+      "value": "#4A505A",
+      "role": "次要文字 · 6.9:1（实色，不用透明度）"
+    },
+    "onBgFaint": {
+      "value": "#686E77",
+      "role": "三级文字 / 未开始日期 · 4.2:1（实色，不用透明度）"
+    },
+    "divider": {
+      "value": "#E0DACD",
+      "role": "分割线 1dp"
+    },
+    "outline": {
+      "value": "#D2CBBB",
+      "role": "描边按钮、圆形图标按钮"
+    },
+    "accentInk": {
+      "value": "#2F6C8A",
+      "role": "已完成 / 进度弧 / 当前任务（月光蓝压深）· 4.9:1"
+    },
+    "accentGold": {
+      "value": "#9A6A1C",
+      "role": "提前完成 / 额度 / 今天标记（暖金压深）· 4.0:1"
+    },
+    "accentReview": {
+      "value": "#63528F",
+      "role": "复习（闷紫）· 5.6:1 · Phase 2 背单词看板才用，目前零调用"
+    },
+    "warn": {
+      "value": "#A8442A",
+      "role": "缺额待补边框（暗铜压深）· 5.0:1"
+    },
+    "warnText": {
+      "value": "#8C3418",
+      "role": "缺额文字与按钮底（比 warn 更深，方向与深色相反）"
+    },
+    "onAccent": {
+      "value": "#FFFFFF",
+      "role": "落在实心强调色上的文字（方向与深色相反）"
+    }
+  },
+  "color": {
+    "$note": "深色。保留但不出货，改动前先读上面的 $colorNote。",
+    "bg": {
+      "value": "#14161C",
+      "role": "页面底色 / Scaffold background"
+    },
+    "surface": {
+      "value": "#1C1F27",
+      "role": "底部面板、弹窗、抬升面"
+    },
+    "surfaceLow": {
+      "value": "rgba(233,227,214,0.035)",
+      "role": "卡片填充（在 bg 上叠加）"
+    },
+    "surfaceSel": {
+      "value": "rgba(233,227,214,0.06)",
+      "role": "选中日格 / 状态标签底"
+    },
+    "onBg": {
+      "value": "#E9E3D6",
+      "role": "主文字（暖砂）"
+    },
+    "onBgMuted": {
+      "value": "rgba(233,227,214,0.50)",
+      "role": "次要文字"
+    },
+    "onBgFaint": {
+      "value": "rgba(233,227,214,0.30)",
+      "role": "三级文字 / 未开始日期"
+    },
+    "divider": {
+      "value": "rgba(233,227,214,0.09)",
+      "role": "分割线 1dp"
+    },
+    "outline": {
+      "value": "rgba(233,227,214,0.14)",
+      "role": "描边按钮、圆形图标按钮"
+    },
+    "accentInk": {
+      "value": "#7FB4C9",
+      "role": "已完成 / 进度弧 / 当前任务（月光蓝）"
+    },
+    "accentGold": {
+      "value": "#D3A46C",
+      "role": "提前完成 / 额度 / 今天标记（暖金）"
+    },
+    "accentReview": {
+      "value": "#A79CD2",
+      "role": "复习（闷紫）· Phase 2 背单词看板才用，目前零调用"
+    },
+    "warn": {
+      "value": "#C47446",
+      "role": "缺额待补边框（暗铜）"
+    },
+    "warnText": {
+      "value": "#E9B489",
+      "role": "缺额文字与按钮底"
+    },
+    "onAccent": {
+      "value": "#14161C",
+      "role": "落在浅色按钮/实心点上的文字"
+    }
+  },
+  "typography": {
+    "fontCn": "Noto Sans SC (思源黑体) · 300/400/500",
+    "fontNum": "Manrope · 300/500",
+    "fontMono": "IBM Plex Mono · 400/500（仅时间戳与编号）",
+    "display": {
+      "size": 60,
+      "weight": 300,
+      "lineHeight": 60,
+      "use": "进度页百分比"
+    },
+    "h1": {
+      "size": 26,
+      "weight": 300,
+      "lineHeight": 38,
+      "use": "首次设置标题"
+    },
+    "h2": {
+      "size": 22,
+      "weight": 300,
+      "lineHeight": 31,
+      "use": "首页 headline"
+    },
+    "h3": {
+      "size": 21,
+      "weight": 500,
+      "lineHeight": 28,
+      "use": "月份标题"
+    },
+    "title": {
+      "size": 16,
+      "weight": 500,
+      "lineHeight": 24,
+      "use": "面板标题 / 弹窗标题"
+    },
+    "body": {
+      "size": 14,
+      "weight": 400,
+      "lineHeight": 20,
+      "use": "任务名"
+    },
+    "bodySm": {
+      "size": 13,
+      "weight": 300,
+      "lineHeight": 20,
+      "use": "面板任务名 / 设置项"
+    },
+    "caption": {
+      "size": 11.5,
+      "weight": 300,
+      "lineHeight": 19,
+      "use": "说明文字"
+    },
+    "label": {
+      "size": 10.5,
+      "weight": 300,
+      "lineHeight": 14,
+      "letterSpacing": 0.08,
+      "use": "分组标签（英文大写）"
+    },
+    "stamp": {
+      "size": 10,
+      "weight": 300,
+      "use": "时间戳（mono）"
+    },
+    "calendarDay": {
+      "size": 12.5,
+      "weight": 400,
+      "use": "日历日期数字"
+    },
+    "calendarTag": {
+      "size": 8,
+      "weight": 300,
+      "use": "日历内 篇·第几天，字体放大 ≥130% 时隐藏"
+    }
+  },
+  "space": {
+    "unit": 4,
+    "screenPadding": 24,
+    "cardPadding": 17,
+    "sectionGap": 22,
+    "listGap": 10,
+    "calendarGap": 4,
+    "statusBarPad": 30,
+    "navBarHeight": 76
+  },
+  "radius": {
+    "card": 14,
+    "cardLg": 16,
+    "sheet": 22,
+    "dialog": 20,
+    "calendarCell": 12,
+    "pill": 24,
+    "button": 30,
+    "dot": 999
+  },
+  "elevation": {
+    "flat": "无投影，靠 3.5% 白叠加区分",
+    "sheet": "0 -18px 40px rgba(0,0,0,0.50)",
+    "dialog": "0 20px 50px rgba(0,0,0,0.50)"
+  },
+  "size": {
+    "tapMin": 48,
+    "checkDot": 22,
+    "checkDotSm": 18,
+    "calendarCell": 54,
+    "ring": 132,
+    "ringStroke": 13,
+    "progressBar": 8,
+    "articleBar": 5,
+    "iconButton": 34,
+    "primaryButtonH": 52
+  },
+  "motion": {
+    "check": {
+      "duration": 220,
+      "easing": "cubic-bezier(0.2,0.8,0.2,1)",
+      "desc": "圆点由中心填充 + 轻触觉 HapticFeedbackType.LongPress"
+    },
+    "ring": {
+      "duration": 480,
+      "easing": "cubic-bezier(0.2,0.8,0.2,1)",
+      "desc": "主环扫过；金弧在额度增加时单次呼吸（不循环）"
+    },
+    "bar": {
+      "duration": 450,
+      "easing": "cubic-bezier(0.2,0.8,0.2,1)"
+    },
+    "sheet": {
+      "duration": 260,
+      "easing": "cubic-bezier(0.2,0.8,0.2,1)",
+      "desc": "ModalBottomSheet 上滑"
+    },
+    "月切换": {
+      "duration": 220,
+      "easing": "easeOut",
+      "desc": "HorizontalPager 横向位移 + 淡入"
+    },
+    "页面": {
+      "duration": 240,
+      "desc": "淡入 + 12dp 上移"
+    }
+  },
+  "logic": {
+    "totalArticles": 42,
+    "tasksPerArticle": 6,
+    "totalTasks": 252,
+    "tasksPerDay": 3,
+    "baseDaysPerArticle": 2,
+    "overallProgress": "已完成小任务 / 252，保留两位小数",
+    "articleProgress": "当前文章已完成 / 6",
+    "creditTasks": "已完成小任务数 − 到今天之前（不含今天）的计划项数",
+    "creditDays": "creditTasks / 3",
+    "deficit": "creditTasks < 0 时的绝对值，警示色，补打卡按最早缺口优先",
+    "eta": "今天 + ceil(剩余项 / 3)",
+    "reschedule": "planStart = 今天，planArt = 当前篇；已完成记录与原始时间戳不变"
+  }
+}

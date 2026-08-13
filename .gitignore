@@ -1,0 +1,29 @@
+# Local code index and editor state
+.codegraph/
+.idea/
+.thumbnail
+
+# Internal project state and personal data (kept in local snapshots, never public)
+HANDOFF.md
+OPEN_QUESTIONS.md
+交接说明.md
+dev/
+releases/
+*备份*.json
+android/app/src/test/resources/real-beici-backup-*.json
+
+# Android/Gradle generated state
+android/.gradle/
+android/.kotlin/
+android/**/build/
+android/local.properties
+*.iml
+
+# Signing material
+android/keystore.properties
+android/app/*.keystore
+android/app/*.jks
+
+# Packaged binaries
+*.apk
+

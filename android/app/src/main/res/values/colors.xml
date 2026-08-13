@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 只放系统层（窗口底色、启动画面、图标）需要的颜色。
+     界面内的颜色一律走 ui/theme/Color.kt，不要在这里加。 -->
+<resources>
+    <color name="ritual_bg">#14161C</color>
+    <color name="ritual_gold">#D3A46C</color>
+</resources>

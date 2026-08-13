@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Archivo:wght@600;700&family=Manrope:wght@300;500;700&display=swap" rel="stylesheet"><style>body{margin:0;background:#e9e6e0;font-family:"Noto Sans SC",system-ui,sans-serif}a{color:#1a1a1a}a:hover{color:#b33a2b}.dv-turn{padding:44px 48px 36px;border-bottom:1px solid rgba(0,0,0,.08)}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}.dv-tid{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 "Noto Sans SC",sans-serif;color:#1a1a1a}.dv-brief{max-width:900px;margin:0 0 34px;font:400 12.5px/1.75 "Noto Sans SC",sans-serif;color:rgba(0,0,0,.62)}.dv-opts{display:flex;flex-wrap:nowrap;gap:32px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.3 "Noto Sans SC",sans-serif;color:rgba(0,0,0,.55)}.dv-card{display:flex;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.07);overflow:hidden}.dv-opt:target .dv-oid{background:#b33a2b;color:#fff}.dv-next{margin:26px 0 0;font:12px/1.6 "Noto Sans SC",sans-serif;color:rgba(0,0,0,.5)}</style></helmet>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">「夜读」<a class="dv-oid" href="#1c">1c</a> 的月历页 + 选中日详情</span></div>
+<p class="dv-brief">关于「进度和月历冲突吗」：不冲突，两者量的是不同的东西。<b>整体进度</b>量的是<b>数量</b>——252 个小任务里完成了多少，它只会往前走，永远不会因为哪天休息而变化。<b>月历</b>量的是<b>时间</b>——这些任务分别落在哪一天、和原计划差多少，它回答的是「我领先还是落后、额度还剩几天、哪天需要补」。所以首页把整体进度做成主环（成就感），月历做成额度和节奏的账本（节奏感），进度页则是两者的合并视图（曲线 + 预计完成日）。把「读了多少篇」也做成打卡是可以的：篇是<b>里程碑</b>（12 / 42，只在第 6 项勾完时 +1），小任务是<b>颗粒度</b>（72 / 252，每次勾选都动），月历上的每格显示的是「第几篇·第几天」，三者是同一份数据的三种精度，不会互相矛盾。</p>
+<div class="dv-opts">
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>月历页 · 光点日历（滚动区 = 月历，固定区 = 顶栏与底栏）</div>
+<div class="dv-card">
+<div style="width:412px;flex:none;background:#14161c;position:relative;font-family:'Noto Sans SC',sans-serif">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:500 11px Manrope,sans-serif;color:rgba(233,227,214,.9)">14:32<span style="display:flex;gap:5px;align-items:center;opacity:.7"><span style="width:9px;height:9px;border:1.5px solid #e9e3d6;border-radius:50%"></span><span style="width:12px;height:8px;border:1.5px solid #e9e3d6;border-radius:2px"></span></span></div>
+  <div style="padding:18px 24px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(233,227,214,.07)">
+    <div style="display:flex;align-items:baseline;gap:9px"><div style="font:500 21px 'Noto Sans SC',sans-serif;color:#e9e3d6">8 月</div><div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.4)">2026</div></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(233,227,214,.14);display:flex;align-items:center;justify-content:center;font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.6)">‹</div>
+      <div style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(233,227,214,.14);display:flex;align-items:center;justify-content:center;font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.6)">›</div>
+    </div>
+  </div>
+  <div style="padding:16px 24px 0">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;border-radius:14px;background:rgba(233,227,214,.035);padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.4);letter-spacing:.08em">本月完成</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6;margin-top:3px">21 <span style="font-weight:300;font-size:11px;color:rgba(233,227,214,.45)">项</span></div></div>
+      <div style="flex:1;border-radius:14px;background:linear-gradient(180deg,rgba(211,164,108,.14),rgba(211,164,108,.05));border:1px solid rgba(211,164,108,.22);padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:rgba(211,164,108,.75);letter-spacing:.08em">剩余额度</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#d3a46c;margin-top:3px">+2 <span style="font-weight:300;font-size:11px;color:rgba(211,164,108,.6)">天</span></div></div>
+      <div style="flex:1;border-radius:14px;background:rgba(233,227,214,.035);padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.4);letter-spacing:.08em">需补</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6;margin-top:3px">0 <span style="font-weight:300;font-size:11px;color:rgba(233,227,214,.45)">项</span></div></div>
+    </div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">一</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">二</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">三</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">四</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">五</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">六</div>
+      <div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">日</div>
+    </div>
+    <div style="margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="36">
+        <div style="height:52px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          <div style="font:400 12.5px Manrope,sans-serif;color:{{ d.numColor }}">{{ d.n }}</div>
+          <div style="width:11px;height:11px;border-radius:50%;background:{{ d.dotBg }};border:1.5px solid {{ d.dotBorder }}"></div>
+          <div style="font:300 8px Manrope,sans-serif;color:rgba(233,227,214,.28)">{{ d.art }}</div>
+          <sc-if value="{{ d.isToday }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;margin-top:44px;width:16px;height:1.5px;border-radius:1px;background:#d3a46c"></div></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:10px 16px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:#7fb4c9"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">按计划完成</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;border:1.5px solid #7fb4c9"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">后续补完成</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:rgba(211,164,108,.28);border:1.5px solid #d3a46c"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">已提前完成（额度覆盖）</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;border:1.5px solid #a5643c;background:rgba(165,100,60,.15)"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">缺额待补</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(233,227,214,.13)"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">计划中</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:16px;height:1.5px;border-radius:1px;background:#d3a46c"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">今天</div></div>
+    </div>
+  </div>
+  <div style="height:392px"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#1c1f27;border-radius:22px 22px 0 0;border-top:1px solid rgba(233,227,214,.09);box-shadow:0 -18px 40px rgba(0,0,0,.45)">
+    <div style="display:flex;justify-content:center;padding:9px 0 4px"><div style="width:36px;height:3.5px;border-radius:2px;background:rgba(233,227,214,.2)"></div></div>
+    <div style="padding:8px 24px 0">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6">8 月 4 日 周二</div><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45);margin-top:3px">原计划 · 第 12 篇 第二天 · 3 项</div></div>
+        <div style="display:flex;align-items:center;gap:6px;border-radius:20px;background:rgba(211,164,108,.14);border:1px solid rgba(211,164,108,.3);padding:6px 11px"><div style="width:6px;height:6px;border-radius:50%;background:#d3a46c"></div><div style="font:500 11px 'Noto Sans SC',sans-serif;color:#d3a46c">已提前完成</div></div>
+      </div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(233,227,214,.035)"><div style="width:18px;height:18px;border-radius:50%;background:#7fb4c9;flex:none"></div><div style="flex:1;font:300 13.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.85)">弄懂错题和不确定的题</div><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.38)">08.03 21:40</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(233,227,214,.035)"><div style="width:18px;height:18px;border-radius:50%;background:#7fb4c9;flex:none"></div><div style="flex:1;font:300 13.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.85)">弄懂标出的单词和短语</div><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.38)">08.03 22:05</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(233,227,214,.035)"><div style="width:18px;height:18px;border-radius:50%;background:#7fb4c9;flex:none"></div><div style="flex:1;font:300 13.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.85)">弄懂标出的长难句</div><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.38)">08.03 22:14</div></div>
+      </div>
+      <div style="margin-top:12px;font:300 11px/1.6 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.42)">这 3 项在 8 月 3 日提前完成，本日额度 +1 天。长按任意日期可改写历史记录。</div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <div style="flex:1;text-align:center;border-radius:24px;border:1px solid rgba(233,227,214,.18);padding:13px 0;font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6">修改记录</div>
+        <div style="flex:1;text-align:center;border-radius:24px;background:#e9e3d6;padding:13px 0;font:500 13px 'Noto Sans SC',sans-serif;color:#14161c">跳到这一篇</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:14px 0 8px"><div style="width:108px;height:3.5px;border-radius:2px;background:rgba(233,227,214,.35)"></div></div>
+  </div>
+</div>
+<div style="width:334px;flex:none;padding:24px 24px 28px;border-left:1px solid rgba(0,0,0,.1);font:400 11.5px/1.7 'Noto Sans SC',sans-serif;color:#3a3a38">
+  <div style="font:500 13px Manrope,sans-serif;color:#111;letter-spacing:.02em">月历 = 额度账本</div>
+  <div style="margin-top:3px;font:400 10px 'IBM Plex Mono',monospace;color:#8a6a3a;letter-spacing:.06em">CALENDAR · CREDIT LEDGER</div>
+  <div style="margin:16px 0;height:1px;background:rgba(0,0,0,.12)"></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div><b style="font-weight:500;color:#111">一格 = 一天的计划</b><br>格内三层信息：日期数字、状态光点、极小的「篇·第几天」（13·¹ = 第 13 篇第一天）。不用色块铺满格子，避免日历变成花斑；颜色只出现在 11dp 的光点上，一眼扫下去只看得到「亮到哪一天」。</div>
+    <div><b style="font-weight:500;color:#111">额度如何显示</b><br>提前做掉的未来日子直接变成暖金圆环＝「已被覆盖，这天可以休息」；顶部「剩余额度 +2 天」是它的汇总。漏做且无额度可扣的日子变暗铜空心＝缺额待补，顶部「需补」计数同步跳数，补打卡时按最早缺额优先。</div>
+    <div><b style="font-weight:500;color:#111">选中日详情（底部面板）</b><br>点任意日期从底部升起面板：原计划 / 实际完成时间戳 / 状态标签 / 两个操作。面板高度 60%，可拖到全屏，返回键先收面板再退出页面。</div>
+    <div><b style="font-weight:500;color:#111">可改写历史</b><br>长按任意格进入编辑：勾选或取消该日任务、改完成时间。撤销已完整完成的篇会弹确认（12 / 42 → 11 / 42），文案明确写出回退结果。</div>
+    <div><b style="font-weight:500;color:#111">滚动与固定</b><br>固定区：状态栏内边距、月份切换栏、底部面板与导航栏。滚动区：摘要 + 日历 + 图例（左右滑动切月，也可点箭头）。360dp 宽下格子从 48dp 压到 44dp，「篇·第几天」小字在系统字体放大 130% 时自动隐藏，只留光点。</div>
+    <div><b style="font-weight:500;color:#111">动效</b><br>切月 = 整块日历 220ms 横向位移＋淡入；某天变为「已提前完成」时暖金环单次呼吸；面板升起 260ms cubic-bezier(.2,.8,.2,1)。</div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+<p class="dv-next">下一步可以说："把 <a class="dv-oid" href="#2a">2a</a> 的缺额待补状态也画一版" · "月历改成周视图看看" · "进入第二阶段，建 <a class="dv-oid" href="#1c">1c</a> 的完整设计系统"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">第一阶段 · 三套视觉方向（「今日学习」概念页，412dp 宽）</span></div>
+<p class="dv-brief">按你的回答确认的机制：任务自由勾选、无休息日、日历为核心正反馈载体、<strong>额度</strong>（提前完成累积的天数，漏做时优先扣减，额度为 0 时进入警示色）、整体进度条为视觉主角、百分比两位小数、允许撤销历史（需确认）、可轻度游戏化、纯本地。当前样本数据：12 / 42 篇 · 72 / 252 任务 · 28.57% · 第 13 篇第一天 · 提前额度 +2 天 · 原计划 10.03 完成，现预计 10.01。三套方向在结构、排版逻辑、日历与进度的表现方式上都不同，不只是换色。</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>纸墨批注 — 暖白纸面、朱红批改、细线与印章</div>
+<div class="dv-card">
+<div style="width:412px;flex:none;background:#f2eee4;position:relative;font-family:'Noto Sans SC',sans-serif">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font:500 11px 'IBM Plex Mono',monospace;color:#1b1a17">14:32<span style="display:flex;gap:5px;align-items:center;opacity:.8"><span style="width:9px;height:9px;border:1.5px solid #1b1a17;border-radius:50%"></span><span style="width:12px;height:8px;border:1.5px solid #1b1a17;border-radius:1px"></span></span></div>
+  <div style="padding:22px 22px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;font:400 10.5px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.5);letter-spacing:.04em">2026.08.05 周三<span>北京时间</span></div>
+    <div style="margin-top:26px;display:flex;align-items:flex-end;gap:10px">
+      <div style="font:600 15px 'Noto Serif SC',serif;color:#1b1a17;padding-bottom:6px">第</div>
+      <div style="font:500 68px/0.82 'Noto Serif SC',serif;color:#1b1a17;letter-spacing:-.02em">13</div>
+      <div style="font:600 15px 'Noto Serif SC',serif;color:#1b1a17;padding-bottom:6px">篇</div>
+      <div style="flex:1"></div>
+      <div style="text-align:right;padding-bottom:7px"><div style="font:500 11px 'Noto Serif SC',serif;color:#b33a2b">第一天</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.45);margin-top:3px">DAY 1 / 2</div></div>
+    </div>
+    <div style="margin-top:18px;height:1px;background:rgba(27,26,23,.16)"></div>
+    <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:baseline"><div style="font:500 11.5px 'Noto Sans SC',sans-serif;color:rgba(27,26,23,.6);letter-spacing:.08em">整体进度</div><div style="font:500 26px 'Noto Serif SC',serif;color:#1b1a17">28.57<span style="font-size:14px">%</span></div></div>
+    <div style="margin-top:10px;height:6px;background:rgba(27,26,23,.1);position:relative"><div style="position:absolute;inset:0 auto 0 0;width:28.57%;background:#1b1a17"></div><div style="position:absolute;top:-4px;bottom:-4px;left:30.95%;width:1.5px;background:#b33a2b"></div></div>
+    <div style="margin-top:8px;display:flex;justify-content:space-between;font:400 10px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.5)"><span>72 / 252 任务 · 12 / 42 篇</span><span style="color:#b33a2b">含额度 78</span></div>
+    <div style="margin-top:20px;border:1px solid rgba(179,58,43,.35);padding:12px 14px;display:flex;gap:12px;align-items:center;background:rgba(179,58,43,.05)">
+      <div style="font:500 22px 'Noto Serif SC',serif;color:#b33a2b">+2</div>
+      <div style="flex:1"><div style="font:500 11.5px 'Noto Sans SC',sans-serif;color:#b33a2b">天提前额度</div><div style="font:400 10px/1.5 'IBM Plex Mono',monospace;color:rgba(27,26,23,.55);margin-top:2px">10.03 → 10.01 预计完成</div></div>
+      <div style="display:flex;gap:3px">
+        <div style="width:7px;height:20px;background:#b33a2b"></div><div style="width:7px;height:20px;background:#b33a2b"></div><div style="width:7px;height:20px;background:#b33a2b"></div><div style="width:7px;height:20px;background:#b33a2b"></div>
+      </div>
+    </div>
+    <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:baseline"><div style="font:500 11.5px 'Noto Sans SC',sans-serif;color:rgba(27,26,23,.6);letter-spacing:.08em">今日任务</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.45)">当前文章 0 / 6</div></div>
+    <div style="margin-top:12px;display:flex;flex-direction:column">
+      <div style="display:flex;gap:13px;align-items:center;padding:14px 0;border-top:1px solid rgba(27,26,23,.14);position:relative">
+        <div style="position:absolute;left:-22px;top:50%;width:14px;height:1.5px;background:#b33a2b"></div>
+        <div style="width:20px;height:20px;border:1.5px solid #1b1a17;flex:none"></div>
+        <div style="flex:1;font:400 14px 'Noto Serif SC',serif;color:#1b1a17">通读全文</div>
+        <div style="font:400 9.5px 'IBM Plex Mono',monospace;color:#b33a2b;letter-spacing:.08em">现在</div>
+      </div>
+      <div style="display:flex;gap:13px;align-items:center;padding:14px 0;border-top:1px solid rgba(27,26,23,.14)"><div style="width:20px;height:20px;border:1.5px solid rgba(27,26,23,.35);flex:none"></div><div style="flex:1;font:400 14px 'Noto Serif SC',serif;color:rgba(27,26,23,.75)">完成课后习题</div></div>
+      <div style="display:flex;gap:13px;align-items:center;padding:14px 0;border-top:1px solid rgba(27,26,23,.14);border-bottom:1px solid rgba(27,26,23,.14)"><div style="width:20px;height:20px;border:1.5px solid rgba(27,26,23,.35);flex:none"></div><div style="flex:1;font:400 14px 'Noto Serif SC',serif;color:rgba(27,26,23,.75)">核对答案，标出错题</div></div>
+    </div>
+    <div style="margin-top:18px;display:flex;justify-content:space-between;align-items:center"><div style="font:400 11px 'Noto Sans SC',sans-serif;color:rgba(27,26,23,.45)">第二天 · 3 项，可提前完成</div><div style="font:500 11px 'Noto Sans SC',sans-serif;color:#b33a2b;border-bottom:1px solid #b33a2b">展开</div></div>
+    <div style="margin-top:22px;display:flex;gap:6px;align-items:flex-end">
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:400 9px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.4)">30</div><div style="width:100%;height:26px;background:#1b1a17"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:400 9px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.4)">31</div><div style="width:100%;height:26px;background:#1b1a17"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:400 9px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.4)">01</div><div style="width:100%;height:26px;background:#1b1a17"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:400 9px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.4)">02</div><div style="width:100%;height:26px;background:#1b1a17"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:400 9px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.4)">03</div><div style="width:100%;height:26px;background:#b33a2b"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:500 9px 'IBM Plex Mono',monospace;color:#1b1a17">04</div><div style="width:100%;height:26px;background:rgba(179,58,43,.28)"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:center"><div style="font:500 9px 'IBM Plex Mono',monospace;color:#1b1a17">05</div><div style="width:100%;height:26px;border:1.5px solid #1b1a17"></div></div>
+    </div>
+    <div style="margin-top:7px;font:400 9.5px 'IBM Plex Mono',monospace;color:rgba(27,26,23,.42)">墨块 = 已完成 · 淡红 = 提前覆盖 · 空框 = 今天</div>
+  </div>
+  <div style="height:78px"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#f2eee4;border-top:1px solid rgba(27,26,23,.16)">
+    <div style="margin:14px 22px 0;background:#1b1a17;color:#f2eee4;text-align:center;padding:14px 0;font:500 13.5px 'Noto Sans SC',sans-serif;letter-spacing:.04em">完成「通读全文」</div>
+    <div style="display:flex;padding:14px 22px 8px;justify-content:space-between;font:400 11px 'Noto Sans SC',sans-serif;color:rgba(27,26,23,.45)"><span style="color:#1b1a17;font-weight:500;border-bottom:1.5px solid #b33a2b;padding-bottom:2px">今日</span><span>月历</span><span>进度</span><span>设置</span></div>
+    <div style="display:flex;justify-content:center;padding:6px 0 8px"><div style="width:108px;height:3.5px;border-radius:2px;background:rgba(27,26,23,.35)"></div></div>
+  </div>
+</div>
+<div style="width:334px;flex:none;padding:24px 24px 28px;border-left:1px solid rgba(0,0,0,.1);font:400 11.5px/1.7 'Noto Sans SC',sans-serif;color:#3a3a38">
+  <div style="font:500 13px 'Noto Serif SC',serif;color:#111;letter-spacing:.02em">纸墨批注</div>
+  <div style="margin-top:3px;font:400 10px 'IBM Plex Mono',monospace;color:#b33a2b;letter-spacing:.06em">INK · ANNOTATION · HAIRLINE</div>
+  <div style="margin:16px 0;height:1px;background:rgba(0,0,0,.12)"></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div><b style="font-weight:500;color:#111">设计理念</b><br>App 是纸质文章的延伸。你在纸上写批注，App 就是那支朱红批改笔——只记录、不喧哗。界面用版心、细线和留白建立秩序，而不是用卡片和阴影。</div>
+    <div><b style="font-weight:500;color:#111">视觉关键词</b><br>纸张 · 批改 · 版心 · 印章 · 细线 · 克制</div>
+    <div><b style="font-weight:500;color:#111">情绪与性格</b><br>安静、可信、像一本用了很久的笔记本。鼓励感来自朱红的一点点出现，而不是庆祝动画。</div>
+    <div><b style="font-weight:500;color:#111">色彩</b>
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <div style="flex:1"><div style="height:34px;background:#f2eee4;border:1px solid rgba(0,0,0,.12)"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">F2EEE4</div></div>
+        <div style="flex:1"><div style="height:34px;background:#e6e0d2"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">E6E0D2</div></div>
+        <div style="flex:1"><div style="height:34px;background:#1b1a17"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">1B1A17</div></div>
+        <div style="flex:1"><div style="height:34px;background:#b33a2b"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">B33A2B</div></div>
+        <div style="flex:1"><div style="height:34px;background:#7d6a3f"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">7D6A3F</div></div>
+      </div>
+      <div style="margin-top:6px;font-size:10.5px;color:#666">纸白 / 淡墨 / 墨黑 / 朱红（进度·当前·警示）/ 赭石（额度耗尽预警）。全局仅一个强调色。</div>
+    </div>
+    <div><b style="font-weight:500;color:#111">字体与排版</b><br>思源宋体：标题、任务文案、数字（第 13 篇 / 28.57%）。IBM Plex Mono：日期、计数、DAY 1/2。正文 14sp，行高 1.6。左右版心 22dp，一切左对齐到同一条基线。</div>
+    <div><b style="font-weight:500;color:#111">卡片 / 按钮 / 日历</b><br>没有卡片，只有分组细线（1dp，16% 墨）。按钮 = 实心墨块矩形，圆角 0，次要按钮 = 朱红下划线文字。日历是账本格子：完成日填墨块，提前覆盖日填淡红，今天为空心墨框，逾期日画朱红斜线。</div>
+    <div><b style="font-weight:500;color:#111">进度表现</b><br>整体进度 = 6dp 高墨条，朱红竖线标出「含额度」的位置，形成「已完成 / 已透支的未来」双读数。当前文章 = 6 个小方格。</div>
+    <div><b style="font-weight:500;color:#111">图标</b><br>1.5dp 单线几何，无填充，尽量用排版和符号（—— × ○）代替图标。</div>
+    <div><b style="font-weight:500;color:#111">动效</b><br>勾选 = 墨迹 180ms 由中心晕开；进度条 320ms ease-out 推进；页面切换 = 横向 200ms 位移，无缩放。</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>刻度 — 瑞士排版、252 格刻度、荧光强调</div>
+<div class="dv-card">
+<div style="width:412px;flex:none;background:#101010;position:relative;font-family:'Noto Sans SC',sans-serif">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font:500 11px 'IBM Plex Mono',monospace;color:#f7f7f5">14:32<span style="display:flex;gap:5px;align-items:center;opacity:.8"><span style="width:9px;height:9px;border:1.5px solid #f7f7f5;border-radius:50%"></span><span style="width:12px;height:8px;border:1.5px solid #f7f7f5;border-radius:1px"></span></span></div>
+  <div style="padding:18px 20px 0">
+    <div style="display:flex;justify-content:space-between;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.45);letter-spacing:.14em">WED 05.08.2026 BJT<span>13 / 42</span></div>
+    <div style="margin-top:22px;display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div style="font:700 82px/0.78 Archivo,sans-serif;color:#f7f7f5;letter-spacing:-.045em">28<span style="color:#c9f24d">.57</span></div>
+        <div style="margin-top:10px;font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.5);letter-spacing:.14em">OVERALL / 整体进度 %</div>
+      </div>
+      <div style="text-align:right;border-left:1px solid rgba(247,247,245,.18);padding-left:14px">
+        <div style="font:700 26px Archivo,sans-serif;color:#f7f7f5;line-height:1">72</div>
+        <div style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.4);letter-spacing:.1em">/252 任务</div>
+        <div style="margin-top:12px;font:700 26px Archivo,sans-serif;color:#f7f7f5;line-height:1">12</div>
+        <div style="font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.4);letter-spacing:.1em">/42 篇</div>
+      </div>
+    </div>
+    <div style="margin-top:22px;display:grid;grid-template-columns:repeat(42,1fr);gap:2px">
+      <div style="grid-column:span 12;height:9px;background:#f7f7f5"></div>
+      <div style="grid-column:span 1;height:9px;background:#c9f24d"></div>
+      <div style="grid-column:span 29;height:9px;background:rgba(247,247,245,.16)"></div>
+    </div>
+    <div style="margin-top:6px;display:flex;justify-content:space-between;font:500 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.38);letter-spacing:.08em"><span>42 篇刻度尺</span><span style="color:#c9f24d">▲ 当前 13</span></div>
+    <div style="margin-top:20px;background:#1a1a1a;padding:14px;display:flex;align-items:center;gap:14px">
+      <div style="font:700 30px Archivo,sans-serif;color:#c9f24d;line-height:1">+2</div>
+      <div style="flex:1"><div style="font:500 11px 'Noto Sans SC',sans-serif;color:#f7f7f5">额度 · 2 天 / 4 项</div><div style="font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.45);margin-top:3px;letter-spacing:.06em">ETA 10.03 → 10.01</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,6px);gap:3px">
+        <div style="height:6px;background:#c9f24d"></div><div style="height:6px;background:#c9f24d"></div><div style="height:6px;background:#c9f24d"></div>
+        <div style="height:6px;background:#c9f24d"></div><div style="height:6px;background:rgba(247,247,245,.2)"></div><div style="height:6px;background:rgba(247,247,245,.2)"></div>
+      </div>
+    </div>
+    <div style="margin-top:22px;display:flex;justify-content:space-between;align-items:baseline">
+      <div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.5);letter-spacing:.14em">TODAY · DAY 1 / 2</div>
+      <div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.5);letter-spacing:.1em">0 / 6</div>
+    </div>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:12px;background:#c9f24d;padding:15px 14px">
+        <div style="font:700 11px 'IBM Plex Mono',monospace;color:rgba(16,16,16,.55)">01</div>
+        <div style="flex:1;font:500 14.5px 'Noto Sans SC',sans-serif;color:#101010">通读全文</div>
+        <div style="width:20px;height:20px;border:2px solid #101010"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;padding:15px 14px"><div style="font:700 11px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.35)">02</div><div style="flex:1;font:400 14.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.85)">完成课后习题</div><div style="width:20px;height:20px;border:2px solid rgba(247,247,245,.3)"></div></div>
+      <div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;padding:15px 14px"><div style="font:700 11px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.35)">03</div><div style="flex:1;font:400 14.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.85)">核对答案，标出错题</div><div style="width:20px;height:20px;border:2px solid rgba(247,247,245,.3)"></div></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px dashed rgba(247,247,245,.2)"><div style="font:700 11px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.3)">04—06</div><div style="flex:1;font:400 12.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.5)">第二天 · 可提前解锁</div><div style="font:700 13px Archivo,sans-serif;color:#c9f24d">+</div></div>
+    </div>
+  </div>
+  <div style="height:96px"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#101010">
+    <div style="margin:0 20px;background:#f7f7f5;color:#101010;text-align:center;padding:15px 0;font:700 13px Archivo,sans-serif;letter-spacing:.1em">MARK DONE · 01</div>
+    <div style="display:flex;margin-top:14px;border-top:1px solid rgba(247,247,245,.14)">
+      <div style="flex:1;text-align:center;padding:12px 0 8px;background:rgba(201,242,77,.1);border-top:2px solid #c9f24d;margin-top:-1px"><div style="font:700 9px 'IBM Plex Mono',monospace;color:#c9f24d">01</div><div style="font:500 10.5px 'Noto Sans SC',sans-serif;color:#f7f7f5;margin-top:2px">今日</div></div>
+      <div style="flex:1;text-align:center;padding:12px 0 8px"><div style="font:700 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.3)">02</div><div style="font:400 10.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.55);margin-top:2px">月历</div></div>
+      <div style="flex:1;text-align:center;padding:12px 0 8px"><div style="font:700 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.3)">03</div><div style="font:400 10.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.55);margin-top:2px">进度</div></div>
+      <div style="flex:1;text-align:center;padding:12px 0 8px"><div style="font:700 9px 'IBM Plex Mono',monospace;color:rgba(247,247,245,.3)">04</div><div style="font:400 10.5px 'Noto Sans SC',sans-serif;color:rgba(247,247,245,.55);margin-top:2px">设置</div></div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:6px 0 8px"><div style="width:108px;height:3.5px;border-radius:2px;background:rgba(247,247,245,.4)"></div></div>
+  </div>
+</div>
+<div style="width:334px;flex:none;padding:24px 24px 28px;border-left:1px solid rgba(0,0,0,.1);font:400 11.5px/1.7 'Noto Sans SC',sans-serif;color:#3a3a38">
+  <div style="font:700 13px Archivo,sans-serif;color:#111;letter-spacing:.04em">刻度 / SEQUENCE</div>
+  <div style="margin-top:3px;font:400 10px 'IBM Plex Mono',monospace;color:#6f8c0e;letter-spacing:.06em">SWISS · GRID · 252 TICKS</div>
+  <div style="margin:16px 0;height:1px;background:rgba(0,0,0,.12)"></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div><b style="font-weight:500;color:#111">设计理念</b><br>252 个小任务本身就是最好的图形。把进度做成一把可数的刻度尺——你能看见自己站在第几格，而不是一个抽象的百分比。瑞士排版：网格、超大数字、单色荧光强调。</div>
+    <div><b style="font-weight:500;color:#111">视觉关键词</b><br>刻度 · 网格 · 数字 · 高对比 · 工业 · 精密</div>
+    <div><b style="font-weight:500;color:#111">情绪与性格</b><br>冷静而锐利，像仪表或工程软件。正反馈来自「格子被点亮」的确定感和数字跳动，不靠拟物。</div>
+    <div><b style="font-weight:500;color:#111">色彩</b>
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <div style="flex:1"><div style="height:34px;background:#101010"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">101010</div></div>
+        <div style="flex:1"><div style="height:34px;background:#1a1a1a"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">1A1A1A</div></div>
+        <div style="flex:1"><div style="height:34px;background:#f7f7f5;border:1px solid rgba(0,0,0,.12)"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">F7F7F5</div></div>
+        <div style="flex:1"><div style="height:34px;background:#c9f24d"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">C9F24D</div></div>
+        <div style="flex:1"><div style="height:34px;background:#ff5c38"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">FF5C38</div></div>
+      </div>
+      <div style="margin-top:6px;font-size:10.5px;color:#666">近黑底 / 层级面 / 纸白字 / 荧光青柠（额度·当前·完成）/ 橙红（额度归零与逾期）。深色为主，浅色主题同一套 token 反转。</div>
+    </div>
+    <div><b style="font-weight:500;color:#111">字体与排版</b><br>Archivo 700 用于所有巨型数字（28.57 / +2 / 72）；IBM Plex Mono 500 全大写＋字距 .14em 做标签；思源黑体做中文任务文案。8dp 基线网格，模块之间靠 2dp 缝隙而非留白分隔。</div>
+    <div><b style="font-weight:500;color:#111">卡片 / 按钮 / 日历</b><br>没有圆角、没有阴影——层级只靠明度台阶（#101010 / #1A1A1A）和 2dp 缝隙。按钮 = 满宽实心矩形。日历 = 等宽数字方阵，完成格填白、提前覆盖格填青柠、缺额格填橙红，长按任意格即可改写历史。</div>
+    <div><b style="font-weight:500;color:#111">进度表现</b><br>主进度 = 42 段刻度尺（每段 6 个任务的小刻度）＋ 巨型百分比，小数部分用强调色。额度用 6 点点阵表示可透支的任务数。</div>
+    <div><b style="font-weight:500;color:#111">图标</b><br>几乎不用图标：编号（01—04）、箭头、+ − 符号代替。必要时 2dp 直角单线。</div>
+    <div><b style="font-weight:500;color:#111">动效</b><br>不用淡入：数字翻牌（odometer 260ms）、刻度按序点亮（每格 24ms 级联）、行状态切换用瞬时反色 + 60ms 位移。页面转场为硬切 + 8dp 位移。</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>夜读 — 深墨底、弧形环、柔和金光</div>
+<div class="dv-card">
+<div style="width:412px;flex:none;background:#14161c;position:relative;font-family:'Noto Sans SC',sans-serif">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:500 11px Manrope,sans-serif;color:rgba(233,227,214,.9)">14:32<span style="display:flex;gap:5px;align-items:center;opacity:.7"><span style="width:9px;height:9px;border:1.5px solid #e9e3d6;border-radius:50%"></span><span style="width:12px;height:8px;border:1.5px solid #e9e3d6;border-radius:2px"></span></span></div>
+  <div style="padding:24px 24px 0">
+    <div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.45);letter-spacing:.06em">8月5日 周三 · 14:32 北京</div>
+    <div style="margin-top:6px;font:300 22px/1.4 'Noto Sans SC',sans-serif;color:#e9e3d6">今天读<span style="color:#d3a46c;font-weight:500"> 第 13 篇</span>的第一天</div>
+    <div style="margin-top:26px;display:flex;align-items:center;gap:22px">
+      <div style="position:relative;width:132px;height:132px;flex:none">
+        <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(233,227,214,.12)"></div>
+        <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,#7fb4c9 0turn 0.2857turn,rgba(211,164,108,.55) 0.2857turn 0.3095turn,rgba(233,227,214,.08) 0.3095turn 1turn);mask:radial-gradient(circle,transparent 52px,#000 53.5px);-webkit-mask:radial-gradient(circle,transparent 52px,#000 53.5px)"></div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font:500 27px Manrope,sans-serif;color:#e9e3d6;letter-spacing:-.02em">28.57<span style="font-size:14px;font-weight:300">%</span></div>
+          <div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.1em;margin-top:2px">72 / 252</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+        <div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">完整学完</div><div style="font:500 17px 'Noto Sans SC',sans-serif;color:#e9e3d6;margin-top:2px">12 <span style="font-weight:300;font-size:12px;color:rgba(233,227,214,.45)">/ 42 篇</span></div></div>
+        <div style="height:1px;background:rgba(233,227,214,.1)"></div>
+        <div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">当前文章</div><div style="display:flex;gap:4px;margin-top:6px"><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div><div style="width:14px;height:4px;border-radius:2px;background:rgba(233,227,214,.18)"></div></div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);margin-top:6px">0 / 6 项</div></div>
+      </div>
+    </div>
+    <div style="margin-top:24px;border-radius:16px;background:linear-gradient(180deg,rgba(211,164,108,.14),rgba(211,164,108,.05));border:1px solid rgba(211,164,108,.22);padding:15px 17px;display:flex;align-items:center;gap:14px">
+      <div style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(211,164,108,.6);display:flex;align-items:center;justify-content:center;font:500 13px Manrope,sans-serif;color:#d3a46c;flex:none">+2</div>
+      <div style="flex:1"><div style="font:500 12.5px 'Noto Sans SC',sans-serif;color:#e9e3d6">你已经领先计划 2 天</div><div style="font:300 11px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5);margin-top:2px">原定 10 月 3 日读完，现在预计 10 月 1 日</div></div>
+    </div>
+    <div style="margin-top:26px;font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.12em">今日 3 项</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 17px;border-radius:14px;background:rgba(127,180,201,.1);border:1px solid rgba(127,180,201,.3)">
+        <div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #7fb4c9;flex:none"></div>
+        <div style="flex:1;font:400 14.5px 'Noto Sans SC',sans-serif;color:#e9e3d6">通读全文</div>
+        <div style="font:300 10px Manrope,sans-serif;color:#7fb4c9;letter-spacing:.1em">NEXT</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 17px;border-radius:14px;background:rgba(233,227,214,.035)"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(233,227,214,.22);flex:none"></div><div style="flex:1;font:300 14.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.8)">完成课后习题</div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 17px;border-radius:14px;background:rgba(233,227,214,.035)"><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(233,227,214,.22);flex:none"></div><div style="flex:1;font:300 14.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.8)">核对答案，标出错题</div></div>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:9px;justify-content:center"><div style="width:6px;height:6px;border-radius:50%;background:rgba(211,164,108,.55)"></div><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">还有余力？可以提前做第二天的 3 项</div></div>
+  </div>
+  <div style="height:104px"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(20,22,28,0),#14161c 26%)">
+    <div style="margin:0 24px;border-radius:30px;background:#e9e3d6;color:#14161c;text-align:center;padding:16px 0;font:500 14px 'Noto Sans SC',sans-serif">完成「通读全文」</div>
+    <div style="display:flex;padding:16px 24px 6px;justify-content:space-between;align-items:center">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:#d3a46c"></div><div style="font:500 10.5px 'Noto Sans SC',sans-serif;color:#e9e3d6">今日</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:transparent"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">月历</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:transparent"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">进度</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:transparent"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">设置</div></div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:6px 0 8px"><div style="width:108px;height:3.5px;border-radius:2px;background:rgba(233,227,214,.35)"></div></div>
+  </div>
+</div>
+<div style="width:334px;flex:none;padding:24px 24px 28px;border-left:1px solid rgba(0,0,0,.1);font:400 11.5px/1.7 'Noto Sans SC',sans-serif;color:#3a3a38">
+  <div style="font:500 13px Manrope,sans-serif;color:#111;letter-spacing:.02em">夜读 / RITUAL</div>
+  <div style="margin-top:3px;font:400 10px 'IBM Plex Mono',monospace;color:#8a6a3a;letter-spacing:.06em">DARK · ARC · WARM GLOW</div>
+  <div style="margin:16px 0;height:1px;background:rgba(0,0,0,.12)"></div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div><b style="font-weight:500;color:#111">设计理念</b><br>考研复习多半发生在深夜的书桌上。界面像一盏台灯：深墨底、暖光点、圆弧与呼吸感。它用一句人话告诉你今天要做什么，再用一圈光告诉你走了多远。</div>
+    <div><b style="font-weight:500;color:#111">视觉关键词</b><br>夜色 · 台灯 · 弧线 · 呼吸 · 柔和 · 仪式</div>
+    <div><b style="font-weight:500;color:#111">情绪与性格</b><br>温柔陪伴型。鼓励感靠暖金色的「领先 2 天」和环形合拢的满足感，克制不幼稚，没有徽章和彩带。</div>
+    <div><b style="font-weight:500;color:#111">色彩</b>
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <div style="flex:1"><div style="height:34px;background:#14161c"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">14161C</div></div>
+        <div style="flex:1"><div style="height:34px;background:#1c1f27"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">1C1F27</div></div>
+        <div style="flex:1"><div style="height:34px;background:#e9e3d6"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">E9E3D6</div></div>
+        <div style="flex:1"><div style="height:34px;background:#7fb4c9"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">7FB4C9</div></div>
+        <div style="flex:1"><div style="height:34px;background:#d3a46c"></div><div style="font:400 8.5px 'IBM Plex Mono',monospace;margin-top:4px;color:#777">D3A46C</div></div>
+      </div>
+      <div style="margin-top:6px;font-size:10.5px;color:#666">墨蓝底 / 抬升面 / 暖砂字 / 月光蓝（已完成进度、当前任务）/ 暖金（额度与提前完成）。两个强调色同明度同彩度，仅色相不同；额度归零时暖金转为暗铜警示。</div>
+    </div>
+    <div><b style="font-weight:500;color:#111">字体与排版</b><br>Manrope 300/500 处理数字与英文标签，思源黑体 300/400 处理中文；正文行高 1.7，大量留白。标题写成完整句子（「今天读第 13 篇的第一天」）而非标签。</div>
+    <div><b style="font-weight:500;color:#111">卡片 / 按钮 / 日历</b><br>圆角 14—16dp，不用投影，层级靠 3.5% 白叠加与 1dp 内描边。主按钮为 30dp 全圆角浅色胶囊。日历用「光点」表达：完成日为实心圆，提前覆盖日为暖金圆环，缺额日为暗铜空心，今天多一圈外环。</div>
+    <div><b style="font-weight:500;color:#111">进度表现</b><br>整体进度是主环：月光蓝弧＝已完成，暖金弧＝额度带来的提前量，缺口＝剩余。当前文章 = 6 段胶囊刻度。</div>
+    <div><b style="font-weight:500;color:#111">图标</b><br>1.5dp 圆头圆角单线，几何简洁；状态更多用色点而不是图标。</div>
+    <div><b style="font-weight:500;color:#111">动效</b><br>勾选 = 圆点由中心 220ms 填充 + 轻触觉；主环 480ms cubic-bezier(.2,.8,.2,1) 扫过；额度增加时暖金弧呼吸一次（一次，不循环）。转场 = 淡入 + 12dp 上移，240ms。</div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">下一步可以说："选 <a class="dv-oid" href="#1b">1b</a>，但配色换成 <a class="dv-oid" href="#1a">1a</a> 的纸墨" · "把 <a class="dv-oid" href="#1c">1c</a> 的月历页也画出来看看" · "再来 3 个更大胆的方向"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const ink = "#7fb4c9", gold = "#d3a46c", sand = "#e9e3d6";
+    const styles = {
+      done:  { numColor: "rgba(233,227,214,.8)", dotBg: ink, dotBorder: ink },
+      late:  { numColor: "rgba(233,227,214,.8)", dotBg: "transparent", dotBorder: ink },
+      early: { numColor: gold, dotBg: "rgba(211,164,108,.28)", dotBorder: gold },
+      today: { numColor: sand, dotBg: "rgba(233,227,214,.1)", dotBorder: "rgba(233,227,214,.55)" },
+      plan:  { numColor: "rgba(233,227,214,.3)", dotBg: "transparent", dotBorder: "rgba(233,227,214,.13)" }
+    };
+    const days = [];
+    for (let i = 0; i < 5; i++) days.push({ blank: true, n: "", art: "", isToday: false, numColor: "transparent", dotBg: "transparent", dotBorder: "transparent" });
+    for (let n = 1; n <= 31; n++) {
+      let art, ph, st;
+      if (n <= 2) { art = 11; ph = n; st = n === 2 ? "late" : "done"; }
+      else if (n === 3) { art = 12; ph = 1; st = "done"; }
+      else if (n === 4) { art = 12; ph = 2; st = "early"; }
+      else { art = 13 + Math.floor((n - 5) / 2); ph = ((n - 5) % 2) + 1; st = n === 5 ? "today" : "plan"; }
+      days.push({ blank: false, n: String(n), art: art + (ph === 1 ? "·¹" : "·²"), isToday: n === 5, ...styles[st] });
+    }
+    return { days };
+  }
+}
+</script>
+</body>
+</html>

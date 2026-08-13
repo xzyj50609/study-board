@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Manrope:wght@300;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>body{margin:0;background:#0b0c10;font-family:"Noto Sans SC",system-ui,sans-serif}a{color:#7fb4c9}a:hover{color:#d3a46c}*{box-sizing:border-box}.sc::-webkit-scrollbar{width:0}</style></helmet>
+<div style="min-height:100vh;display:flex;gap:26px;padding:26px 30px;align-items:flex-start;justify-content:center">
+
+<div style="flex:none;width:412px;height:892px;background:#14161c;border-radius:30px;position:relative;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.6);border:1px solid rgba(233,227,214,.09)">
+  <div style="height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:500 11px Manrope,sans-serif;color:rgba(233,227,214,.9);position:relative;z-index:3">{{ clock }}<span style="display:flex;gap:5px;align-items:center;opacity:.7"><span style="width:9px;height:9px;border:1.5px solid #e9e3d6;border-radius:50%"></span><span style="width:12px;height:8px;border:1.5px solid #e9e3d6;border-radius:2px"></span></span></div>
+
+  <sc-if value="{{ isSetup }}" hint-placeholder-val="{{ false }}">
+  <div class="sc" style="position:absolute;top:30px;left:0;right:0;bottom:0;overflow:auto;padding:36px 26px 30px">
+    <div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.4);letter-spacing:.1em">SETUP · 首次设置</div>
+    <div style="margin-top:12px;font:300 26px/1.45 'Noto Sans SC',sans-serif;color:#e9e3d6">先确认你的<span style="color:#d3a46c;font-weight:500">起点</span>和节奏</div>
+    <div style="margin-top:8px;font:300 12.5px/1.7 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">这些之后都能在设置里改。App 按北京时间判断日期。</div>
+    <div style="margin-top:28px;border-radius:16px;background:rgba(233,227,214,.035);padding:18px">
+      <div style="font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">文章总数</div>
+      <div style="margin-top:8px;display:flex;align-items:baseline;gap:8px"><div style="font:500 30px Manrope,sans-serif;color:#e9e3d6">42</div><div style="font:300 12px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">篇 · 每篇 6 项 = 252 项</div></div>
+    </div>
+    <div style="margin-top:12px;border-radius:16px;background:rgba(233,227,214,.035);padding:18px">
+      <div style="font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">已经学完</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:14px">
+        <div onClick="{{ decStart }}" style="width:42px;height:42px;border-radius:50%;border:1px solid rgba(233,227,214,.16);display:flex;align-items:center;justify-content:center;font:300 18px Manrope,sans-serif;color:#e9e3d6;cursor:pointer">−</div>
+        <div style="flex:1;text-align:center"><div style="font:500 30px Manrope,sans-serif;color:#e9e3d6">{{ setupDone }}</div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.42);margin-top:2px">篇 · 下一篇是第 {{ setupNext }} 篇</div></div>
+        <div onClick="{{ incStart }}" style="width:42px;height:42px;border-radius:50%;border:1px solid rgba(233,227,214,.16);display:flex;align-items:center;justify-content:center;font:300 18px Manrope,sans-serif;color:#e9e3d6;cursor:pointer">+</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;border-radius:16px;background:rgba(233,227,214,.035);padding:18px">
+      <div style="font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">基础节奏</div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <div style="flex:1;text-align:center;border-radius:12px;background:rgba(127,180,201,.14);border:1px solid rgba(127,180,201,.35);padding:12px 0;font:500 12.5px 'Noto Sans SC',sans-serif;color:#e9e3d6">2 天 / 篇</div>
+        <div style="flex:1;text-align:center;border-radius:12px;border:1px solid rgba(233,227,214,.12);padding:12px 0;font:300 12.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">1 天 / 篇</div>
+        <div style="flex:1;text-align:center;border-radius:12px;border:1px solid rgba(233,227,214,.12);padding:12px 0;font:300 12.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">3 天 / 篇</div>
+      </div>
+      <div style="margin-top:12px;font:300 11.5px/1.6 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.42)">节奏只用来排计划和算额度，不会锁住你——任何一天都可以多做。</div>
+    </div>
+    <div style="margin-top:20px;border-radius:16px;background:linear-gradient(180deg,rgba(211,164,108,.14),rgba(211,164,108,.05));border:1px solid rgba(211,164,108,.22);padding:16px 18px">
+      <div style="font:500 12.5px 'Noto Sans SC',sans-serif;color:#d3a46c">剩余 {{ setupRemain }} 篇 · 基础计划 {{ setupDays }} 个学习日</div>
+      <div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5);margin-top:3px">预计 {{ setupEta }} 完成</div>
+    </div>
+    <div onClick="{{ finishSetup }}" style="margin-top:24px;border-radius:28px;background:#e9e3d6;text-align:center;padding:16px 0;font:500 14px 'Noto Sans SC',sans-serif;color:#14161c;cursor:pointer">开始第 {{ setupNext }} 篇</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:30px;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center">
+    <div style="width:150px;height:150px;border-radius:50%;border:1.5px solid rgba(211,164,108,.5);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(211,164,108,.16),transparent 70%)"><div style="font:500 34px Manrope,sans-serif;color:#d3a46c">42</div></div>
+    <div style="margin-top:30px;font:300 25px/1.45 'Noto Sans SC',sans-serif;color:#e9e3d6">42 篇全部读完</div>
+    <div style="margin-top:10px;font:300 12.5px/1.8 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">252 / 252 项 · 100.00%<br>用了 {{ doneSpan }} 天，比基础计划提前 {{ doneAhead }} 天</div>
+    <div onClick="{{ goProgress }}" style="margin-top:34px;border-radius:28px;border:1px solid rgba(233,227,214,.2);padding:14px 30px;font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6;cursor:pointer">查看全部记录</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+  <div class="sc" style="position:absolute;top:30px;left:0;right:0;bottom:174px;overflow:auto;padding:22px 24px 20px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.45);letter-spacing:.06em">{{ dateLine }}</div>
+      <div onClick="{{ goSettings }}" style="font:300 11px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4);cursor:pointer">设置</div>
+    </div>
+    <div style="margin-top:6px;font:300 22px/1.4 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ headline }}</div>
+    <div style="margin-top:24px;display:flex;align-items:center;gap:22px">
+      <div style="position:relative;width:132px;height:132px;flex:none">
+        <div style="position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(233,227,214,.12)"></div>
+        <div style="position:absolute;inset:0;border-radius:50%;background:{{ ringGradient }};mask:radial-gradient(circle,transparent 52px,#000 53.5px);-webkit-mask:radial-gradient(circle,transparent 52px,#000 53.5px);transition:background .5s cubic-bezier(.2,.8,.2,1)"></div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font:500 27px Manrope,sans-serif;color:#e9e3d6;letter-spacing:-.02em">{{ pct }}<span style="font-size:14px;font-weight:300">%</span></div>
+          <div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.1em;margin-top:2px">{{ totalDone }} / 252</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:13px">
+        <div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">完整学完</div><div style="font:500 17px 'Noto Sans SC',sans-serif;color:#e9e3d6;margin-top:2px">{{ fullArts }} <span style="font-weight:300;font-size:12px;color:rgba(233,227,214,.45)">/ 42 篇</span></div></div>
+        <div style="height:1px;background:rgba(233,227,214,.1)"></div>
+        <div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.08em">当前第 {{ curArt }} 篇</div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <sc-for list="{{ curSegs }}" as="s" hint-placeholder-count="6"><div style="width:14px;height:4px;border-radius:2px;background:{{ s.bg }}"></div></sc-for>
+          </div>
+          <div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);margin-top:6px">{{ curDone }} / 6 项 · {{ curPct }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ hasCredit }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:22px;border-radius:16px;background:linear-gradient(180deg,rgba(211,164,108,.14),rgba(211,164,108,.05));border:1px solid rgba(211,164,108,.22);padding:15px 17px;display:flex;align-items:center;gap:14px">
+      <div style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(211,164,108,.6);display:flex;align-items:center;justify-content:center;font:500 12px Manrope,sans-serif;color:#d3a46c;flex:none">{{ creditBadge }}</div>
+      <div style="flex:1"><div style="font:500 12.5px 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ creditTitle }}</div><div style="font:300 11px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5);margin-top:2px">{{ creditSub }}</div></div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ hasDeficit }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:22px;border-radius:16px;background:rgba(165,100,60,.14);border:1px solid rgba(165,100,60,.4);padding:15px 17px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(196,116,70,.7);display:flex;align-items:center;justify-content:center;font:500 12px Manrope,sans-serif;color:#c47446;flex:none">{{ deficitBadge }}</div>
+        <div style="flex:1"><div style="font:500 12.5px 'Noto Sans SC',sans-serif;color:#e9b489">额度已用完，缺 {{ deficit }} 项</div><div style="font:300 11px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5);margin-top:2px">最早缺口 {{ deficitFrom }} · 补完才回到计划线</div></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:9px">
+        <div onClick="{{ makeup }}" style="flex:1;text-align:center;border-radius:22px;background:#e9b489;padding:11px 0;font:500 12.5px 'Noto Sans SC',sans-serif;color:#2a1a10;cursor:pointer">优先补上</div>
+        <div onClick="{{ askReschedule }}" style="flex:1;text-align:center;border-radius:22px;border:1px solid rgba(233,227,214,.2);padding:11px 0;font:400 12.5px 'Noto Sans SC',sans-serif;color:#e9e3d6;cursor:pointer">重新排期</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <div style="margin-top:26px;display:flex;align-items:baseline;justify-content:space-between">
+      <div style="font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.12em">{{ groupALabel }}</div>
+      <div onClick="{{ goArticle }}" style="font:300 11px 'Noto Sans SC',sans-serif;color:#7fb4c9;cursor:pointer">文章详情</div>
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ groupA }}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.onTap }}" style="display:flex;align-items:center;gap:14px;padding:16px 17px;border-radius:14px;background:{{ t.bg }};border:1px solid {{ t.border }};cursor:pointer;transition:background .2s">
+          <div style="width:22px;height:22px;border-radius:50%;flex:none;background:{{ t.dotBg }};border:1.5px solid {{ t.dotBorder }};display:flex;align-items:center;justify-content:center;font:500 11px Manrope,sans-serif;color:#14161c">{{ t.mark }}</div>
+          <div style="flex:1;font:400 14px/1.4 'Noto Sans SC',sans-serif;color:{{ t.color }}">{{ t.name }}</div>
+          <div style="font:300 10px Manrope,sans-serif;color:{{ t.tagColor }};letter-spacing:.08em">{{ t.tag }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:20px;font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.12em">{{ groupBLabel }}</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ groupB }}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.onTap }}" style="display:flex;align-items:center;gap:14px;padding:16px 17px;border-radius:14px;background:{{ t.bg }};border:1px solid {{ t.border }};cursor:pointer;transition:background .2s">
+          <div style="width:22px;height:22px;border-radius:50%;flex:none;background:{{ t.dotBg }};border:1.5px solid {{ t.dotBorder }};display:flex;align-items:center;justify-content:center;font:500 11px Manrope,sans-serif;color:#14161c">{{ t.mark }}</div>
+          <div style="flex:1;font:400 14px/1.4 'Noto Sans SC',sans-serif;color:{{ t.color }}">{{ t.name }}</div>
+          <div style="font:300 10px Manrope,sans-serif;color:{{ t.tagColor }};letter-spacing:.08em">{{ t.tag }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:9px;justify-content:center"><div style="width:6px;height:6px;border-radius:50%;background:rgba(211,164,108,.55)"></div><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">{{ footHint }}</div></div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:76px;padding:0 24px;background:linear-gradient(180deg,rgba(20,22,28,0),#14161c 34%);padding-top:18px">
+    <div onClick="{{ primary }}" style="border-radius:30px;background:#e9e3d6;color:#14161c;text-align:center;padding:16px 0;font:500 14px 'Noto Sans SC',sans-serif;cursor:pointer">{{ primaryLabel }}</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isArticle }}" hint-placeholder-val="{{ false }}">
+  <div class="sc" style="position:absolute;top:30px;left:0;right:0;bottom:76px;overflow:auto;padding:18px 24px 24px">
+    <div style="display:flex;align-items:center;gap:12px"><div onClick="{{ goToday }}" style="font:300 18px Manrope,sans-serif;color:rgba(233,227,214,.6);cursor:pointer">‹</div><div style="font:400 14px 'Noto Sans SC',sans-serif;color:#e9e3d6">第 {{ curArt }} 篇</div></div>
+    <div style="margin-top:22px;display:flex;align-items:flex-end;gap:14px">
+      <div style="font:300 54px/1 Manrope,sans-serif;color:#e9e3d6">{{ curDone }}<span style="font-size:20px;color:rgba(233,227,214,.4)">/6</span></div>
+      <div style="flex:1;padding-bottom:8px"><div style="height:5px;border-radius:3px;background:rgba(233,227,214,.12);overflow:hidden"><div style="height:5px;border-radius:3px;background:#7fb4c9;width:{{ curPctW }};transition:width .4s cubic-bezier(.2,.8,.2,1)"></div></div><div style="font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42);margin-top:6px">当前文章 {{ curPct }}%</div></div>
+    </div>
+    <div style="margin-top:14px;font:300 11.5px/1.7 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">计划 {{ artPlanLine }}。顺序不限，任何一项都可以先勾；单词、短语和长难句的解释写在纸上，App 只记完成情况。</div>
+    <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ allTasks }}" as="t" hint-placeholder-count="6">
+        <div onClick="{{ t.onTap }}" style="display:flex;align-items:flex-start;gap:14px;padding:16px 17px;border-radius:14px;background:{{ t.bg }};border:1px solid {{ t.border }};cursor:pointer">
+          <div style="width:22px;height:22px;border-radius:50%;flex:none;background:{{ t.dotBg }};border:1.5px solid {{ t.dotBorder }};display:flex;align-items:center;justify-content:center;font:500 11px Manrope,sans-serif;color:#14161c">{{ t.mark }}</div>
+          <div style="flex:1"><div style="font:400 14px/1.4 'Noto Sans SC',sans-serif;color:{{ t.color }}">{{ t.name }}</div><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.35);margin-top:4px">{{ t.stamp }}</div></div>
+          <div style="font:300 10px Manrope,sans-serif;color:{{ t.tagColor }};letter-spacing:.08em">{{ t.tag }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isCal }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:14px 24px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(233,227,214,.07)">
+    <div style="display:flex;align-items:baseline;gap:9px"><div style="font:500 21px 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ monthLabel }}</div><div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.4)">{{ yearLabel }}</div></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div onClick="{{ prevMonth }}" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(233,227,214,.14);display:flex;align-items:center;justify-content:center;font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.6);cursor:pointer">‹</div>
+      <div onClick="{{ nextMonth }}" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(233,227,214,.14);display:flex;align-items:center;justify-content:center;font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.6);cursor:pointer">›</div>
+    </div>
+  </div>
+  <div class="sc" style="position:absolute;top:88px;left:0;right:0;bottom:76px;overflow:auto;padding:16px 24px 24px">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;border-radius:14px;background:rgba(233,227,214,.035);padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.4);letter-spacing:.08em">本月完成</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6;margin-top:3px">{{ monthDone }} <span style="font-weight:300;font-size:11px;color:rgba(233,227,214,.45)">项</span></div></div>
+      <div style="flex:1;border-radius:14px;background:{{ creditCardBg }};border:1px solid {{ creditCardBorder }};padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:{{ creditCardLabel }};letter-spacing:.08em">剩余额度</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:{{ creditCardText }};margin-top:3px">{{ creditDays }} <span style="font-weight:300;font-size:11px;opacity:.6">天</span></div></div>
+      <div style="flex:1;border-radius:14px;background:rgba(233,227,214,.035);padding:12px 13px"><div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.4);letter-spacing:.08em">需补</div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:{{ deficitColor }};margin-top:3px">{{ deficit }} <span style="font-weight:300;font-size:11px;color:rgba(233,227,214,.45)">项</span></div></div>
+    </div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+      <sc-for list="{{ weekNames }}" as="w" hint-placeholder-count="7"><div style="text-align:center;font:300 10px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.32)">{{ w.t }}</div></sc-for>
+    </div>
+    <div style="margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+        <div onClick="{{ d.onTap }}" style="height:54px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:{{ d.cellBg }}">
+          <div style="font:400 12.5px Manrope,sans-serif;color:{{ d.numColor }}">{{ d.n }}</div>
+          <div style="width:11px;height:11px;border-radius:50%;background:{{ d.dotBg }};border:1.5px solid {{ d.dotBorder }}"></div>
+          <div style="font:300 8px Manrope,sans-serif;color:rgba(233,227,214,.3)">{{ d.art }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:9px 16px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:#7fb4c9"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">按计划完成</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:linear-gradient(90deg,#7fb4c9 50%,transparent 50%);border:1.5px solid #7fb4c9"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">部分完成</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:rgba(211,164,108,.28);border:1.5px solid #d3a46c"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">提前完成 / 额度覆盖</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:rgba(165,100,60,.2);border:1.5px solid #c47446"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">缺额待补</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(233,227,214,.13)"></div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">计划中</div></div>
+    </div>
+    <div style="margin-top:16px;font:300 11px/1.7 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.35)">点任意日期查看当天计划与实际完成；在详情里可以补记或撤销，历史随时可改。</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isProg }}" hint-placeholder-val="{{ false }}">
+  <div class="sc" style="position:absolute;top:30px;left:0;right:0;bottom:76px;overflow:auto;padding:20px 24px 24px">
+    <div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.1em">PROGRESS · 整体进度</div>
+    <div style="margin-top:18px;display:flex;align-items:flex-end;gap:6px"><div style="font:300 60px/1 Manrope,sans-serif;color:#e9e3d6;letter-spacing:-.02em">{{ pct }}</div><div style="font:300 20px Manrope,sans-serif;color:rgba(233,227,214,.45);padding-bottom:6px">%</div></div>
+    <div style="margin-top:16px;height:8px;border-radius:5px;background:rgba(233,227,214,.1);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;bottom:0;left:0;width:{{ pctW }};background:#7fb4c9;border-radius:5px;transition:width .45s cubic-bezier(.2,.8,.2,1)"></div>
+      <div style="position:absolute;top:0;bottom:0;left:{{ pctW }};width:{{ creditW }};background:rgba(211,164,108,.6)"></div>
+    </div>
+    <div style="margin-top:9px;display:flex;justify-content:space-between;font:300 10.5px Manrope,sans-serif;color:rgba(233,227,214,.42)"><div>{{ totalDone }} / 252 项 · {{ fullArts }} / 42 篇</div><div style="color:#d3a46c">{{ creditNote }}</div></div>
+    <div style="margin-top:24px;display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+      <sc-for list="{{ artGrid }}" as="a" hint-placeholder-count="42">
+        <div style="height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:400 10.5px Manrope,sans-serif;background:{{ a.bg }};border:1px solid {{ a.border }};color:{{ a.color }}">{{ a.n }}</div>
+      </sc-for>
+    </div>
+    <div style="margin-top:12px;font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.35)">实心 = 6 / 6 完成 · 半亮 = 进行中 · 空 = 未开始</div>
+    <div style="margin-top:24px;border-radius:16px;background:rgba(233,227,214,.035);padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">基础计划完成日</div><div style="font:400 13px Manrope,sans-serif;color:rgba(233,227,214,.75)">{{ basePlanEta }}</div></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:baseline"><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.5)">按当前速度预计</div><div style="font:500 15px Manrope,sans-serif;color:#d3a46c">{{ eta }}</div></div>
+      <div style="margin-top:12px;height:1px;background:rgba(233,227,214,.09)"></div>
+      <div style="margin-top:12px;font:300 11.5px/1.7 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">{{ etaNote }}</div>
+      <div onClick="{{ askReschedule }}" style="margin-top:14px;border-radius:22px;border:1px solid rgba(233,227,214,.2);text-align:center;padding:12px 0;font:400 12.5px 'Noto Sans SC',sans-serif;color:#e9e3d6;cursor:pointer">根据当前进度重新排期</div>
+    </div>
+    <div style="margin-top:22px;font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.12em">HISTORY · 最近记录</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ history }}" as="h" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(233,227,214,.07)">
+          <div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.35);width:74px;flex:none">{{ h.when }}</div>
+          <div style="flex:1;font:300 12.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.8)">{{ h.what }}</div>
+          <div style="font:300 10px Manrope,sans-serif;color:{{ h.tagColor }}">{{ h.tag }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ noHistory }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:26px 0;text-align:center;font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.3)">还没有记录 · 勾掉第一项就会出现在这里</div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isSet }}" hint-placeholder-val="{{ false }}">
+  <div class="sc" style="position:absolute;top:30px;left:0;right:0;bottom:76px;overflow:auto;padding:20px 24px 24px">
+    <div style="font:300 12px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.1em">SETTINGS · 设置</div>
+    <div style="margin-top:20px;border-radius:16px;background:rgba(233,227,214,.035);overflow:hidden">
+      <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(233,227,214,.06)"><div><div style="font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6">基础节奏</div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4);margin-top:2px">影响计划日与额度计算</div></div><div style="font:300 12.5px Manrope,sans-serif;color:rgba(233,227,214,.6)">2 天 / 篇 ›</div></div>
+      <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(233,227,214,.06)"><div><div style="font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6">时区</div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4);margin-top:2px">按此判断「今天」</div></div><div style="font:300 12.5px Manrope,sans-serif;color:rgba(233,227,214,.6)">Asia/Shanghai ›</div></div>
+      <div onClick="{{ startSetup }}" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer"><div><div style="font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6">调整起点与总篇数</div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4);margin-top:2px">重新进入设置向导</div></div><div style="font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.5)">›</div></div>
+    </div>
+    <div style="margin-top:14px;border-radius:16px;background:rgba(233,227,214,.035);overflow:hidden">
+      <div onClick="{{ askReschedule }}" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(233,227,214,.06);cursor:pointer"><div style="font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6">重新排期</div><div style="font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.5)">›</div></div>
+      <div onClick="{{ askResetArt }}" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer"><div><div style="font:400 13px 'Noto Sans SC',sans-serif;color:#e9b489">撤销第 {{ lastFullArt }} 篇的完成</div><div style="font:300 10.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4);margin-top:2px">会让完整篇数回退 1</div></div><div style="font:300 13px Manrope,sans-serif;color:rgba(233,227,214,.5)">›</div></div>
+    </div>
+    <div style="margin-top:14px;font:300 11px/1.8 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.3)">数据仅保存在本机，不联网、不提醒。42 篇 × 6 项 = 252 项。</div>
+    <div style="margin-top:22px;font:300 11px Manrope,sans-serif;color:rgba(233,227,214,.42);letter-spacing:.12em">DEMO · 演示状态</div>
+    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">
+      <div onClick="{{ demoOverdue }}" style="border-radius:20px;border:1px solid rgba(196,116,70,.45);padding:9px 14px;font:400 11.5px 'Noto Sans SC',sans-serif;color:#e9b489;cursor:pointer">制造逾期</div>
+      <div onClick="{{ demoAhead }}" style="border-radius:20px;border:1px solid rgba(211,164,108,.45);padding:9px 14px;font:400 11.5px 'Noto Sans SC',sans-serif;color:#d3a46c;cursor:pointer">提前一篇</div>
+      <div onClick="{{ demoFinish }}" style="border-radius:20px;border:1px solid rgba(127,180,201,.45);padding:9px 14px;font:400 11.5px 'Noto Sans SC',sans-serif;color:#7fb4c9;cursor:pointer">跳到全部完成</div>
+      <div onClick="{{ demoReset }}" style="border-radius:20px;border:1px solid rgba(233,227,214,.18);padding:9px 14px;font:400 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.7);cursor:pointer">重置</div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#14161c;border-top:1px solid rgba(233,227,214,.07);z-index:2">
+    <div style="display:flex;padding:12px 24px 6px;justify-content:space-between;align-items:center">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.onTap }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;min-width:56px"><div style="width:5px;height:5px;border-radius:50%;background:{{ n.dot }}"></div><div style="font:400 10.5px 'Noto Sans SC',sans-serif;color:{{ n.color }}">{{ n.t }}</div></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;justify-content:center;padding:6px 0 8px"><div style="width:108px;height:3.5px;border-radius:2px;background:rgba(233,227,214,.35)"></div></div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(8,9,12,.6);z-index:4"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#1c1f27;border-radius:22px 22px 0 0;border-top:1px solid rgba(233,227,214,.09);box-shadow:0 -18px 40px rgba(0,0,0,.5);z-index:5;max-height:82%;overflow:auto" class="sc">
+    <div style="display:flex;justify-content:center;padding:9px 0 4px"><div style="width:36px;height:3.5px;border-radius:2px;background:rgba(233,227,214,.2)"></div></div>
+    <div style="padding:8px 24px 24px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div><div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ sheetTitle }}</div><div style="font:300 11.5px 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45);margin-top:3px">{{ sheetPlan }}</div></div>
+        <div style="display:flex;align-items:center;gap:6px;border-radius:20px;background:{{ sheetTagBg }};border:1px solid {{ sheetTagBorder }};padding:6px 11px;flex:none"><div style="width:6px;height:6px;border-radius:50%;background:{{ sheetTagDot }}"></div><div style="font:500 11px 'Noto Sans SC',sans-serif;color:{{ sheetTagText }}">{{ sheetTag }}</div></div>
+      </div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ sheetTasks }}" as="t" hint-placeholder-count="3">
+          <div onClick="{{ t.onTap }}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(233,227,214,.035);cursor:pointer">
+            <div style="width:18px;height:18px;border-radius:50%;flex:none;background:{{ t.dotBg }};border:1.5px solid {{ t.dotBorder }}"></div>
+            <div style="flex:1;font:300 13px/1.4 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.85)">{{ t.name }}</div>
+            <div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.38)">{{ t.stamp }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:12px;font:300 11px/1.6 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.42)">{{ sheetNote }}</div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <div onClick="{{ closeSheet }}" style="flex:1;text-align:center;border-radius:24px;border:1px solid rgba(233,227,214,.18);padding:13px 0;font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6;cursor:pointer">关闭</div>
+        <div onClick="{{ sheetAction }}" style="flex:1;text-align:center;border-radius:24px;background:#e9e3d6;padding:13px 0;font:500 13px 'Noto Sans SC',sans-serif;color:#14161c;cursor:pointer">{{ sheetActionLabel }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeDialog }}" style="position:absolute;inset:0;background:rgba(8,9,12,.66);z-index:6;display:flex;align-items:center;justify-content:center;padding:0 30px">
+    <div style="width:100%;background:#1c1f27;border-radius:20px;border:1px solid rgba(233,227,214,.1);padding:24px 22px;box-shadow:0 20px 50px rgba(0,0,0,.5)">
+      <div style="font:500 16px 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ dialogTitle }}</div>
+      <div style="margin-top:10px;font:300 12.5px/1.75 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.6)">{{ dialogBody }}</div>
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <div onClick="{{ closeDialog }}" style="flex:1;text-align:center;border-radius:24px;border:1px solid rgba(233,227,214,.18);padding:12px 0;font:400 13px 'Noto Sans SC',sans-serif;color:#e9e3d6;cursor:pointer">取消</div>
+        <div onClick="{{ confirmDialog }}" style="flex:1;text-align:center;border-radius:24px;background:{{ dialogBtnBg }};padding:12px 0;font:500 13px 'Noto Sans SC',sans-serif;color:#14161c;cursor:pointer">{{ dialogBtn }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+
+<div style="flex:none;width:308px;padding:6px 0 0;font-family:'Noto Sans SC',sans-serif;color:rgba(233,227,214,.75)">
+  <div style="font:500 13px Manrope,sans-serif;color:#e9e3d6;letter-spacing:.04em">原型控制台</div>
+  <div style="margin-top:6px;font:300 11.5px/1.7 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.45)">左侧是可点击的真实状态机：勾选、额度、逾期、补打卡、撤销、重新排期都会真的改变数据。模拟时间：{{ dateLine }}</div>
+  <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ demoBtns }}" as="b" hint-placeholder-count="8">
+      <div onClick="{{ b.onTap }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:12px;background:rgba(233,227,214,.05);border:1px solid rgba(233,227,214,.09);cursor:pointer">
+        <div style="font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(233,227,214,.35);width:16px;flex:none">{{ b.k }}</div>
+        <div style="flex:1;font:400 12px 'Noto Sans SC',sans-serif;color:#e9e3d6">{{ b.t }}</div>
+        <div style="font:300 10px Manrope,sans-serif;color:rgba(233,227,214,.35)">{{ b.hint }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(233,227,214,.09);font:300 11px/1.8 'Noto Sans SC',sans-serif;color:rgba(233,227,214,.4)">额度 = 已完成项数 − 到今天为止的计划项数，再折算成天（3 项 / 天）。额度为正 → 未来日子被覆盖，可以休息；为负 → 缺额待补，警示色，补打卡按最早缺口优先。</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:800,&quot;height&quot;:960}}">
+const NAMES = ["通读全文","完成课后习题","核对答案，标出错题和不确定的题","弄懂错题和不确定的题","弄懂标出的单词和短语","弄懂标出的长难句"];
+const INK = "#7fb4c9", GOLD = "#d3a46c", WARN = "#c47446", SAND = "#e9e3d6";
+const D0 = Date.UTC(2026, 7, 5);
+
+const SEED = () => ({
+  day: 0, mins: 872, screen: "today", baseArts: 11, planStart: 0, planArt: 12, sheet: null, dialog: null, monthOff: 0, setupDone: 12,
+  done: { "12-1": "08.03 20:10", "12-2": "08.03 20:55", "12-3": "08.03 21:40", "12-4": "08.04 21:05", "12-5": "08.04 21:30", "12-6": "08.04 22:14" },
+  log: [
+    { when: "08.04 22:14", what: "第 12 篇 · 弄懂标出的长难句", tag: "提前" },
+    { when: "08.04 21:30", what: "第 12 篇 · 弄懂标出的单词和短语", tag: "提前" },
+    { when: "08.04 21:05", what: "第 12 篇 · 弄懂错题和不确定的题", tag: "提前" },
+    { when: "08.03 21:40", what: "第 12 篇 · 核对答案，标出错题和不确定的题", tag: "完成" }
+  ]
+});
+
+class Component extends DCLogic {
+  state = SEED();
+
+  dateAt(off) { return new Date(D0 + off * 86400000); }
+  fmt(off) { const d = this.dateAt(off); return (d.getUTCMonth() + 1) + " 月 " + d.getUTCDate() + " 日"; }
+  fmtShort(off) { const d = this.dateAt(off); return String(d.getUTCMonth() + 1).padStart(2, "0") + "." + String(d.getUTCDate()).padStart(2, "0"); }
+  wk(off) { return "周" + "日一二三四五六"[this.dateAt(off).getUTCDay()]; }
+  planFor(off) {
+    const k = off - this.state.planStart;
+    if (k < 0) return null;
+    return { art: this.state.planArt + Math.floor(k / 2), phase: (k % 2) + 1 };
+  }
+  isDone(a, i) { return !!this.state.done[a + "-" + i]; }
+  newCount() { return Object.keys(this.state.done).length; }
+  artDone(a) { let c = 0; for (let i = 1; i <= 6; i++) if (this.isDone(a, i)) c++; return c; }
+  curArt() { for (let a = this.state.baseArts + 1; a <= 42; a++) if (this.artDone(a) < 6) return a; return 42; }
+  fullArts() { let c = this.state.baseArts; for (let a = this.state.baseArts + 1; a <= 42; a++) if (this.artDone(a) === 6) c++; return c; }
+  totalDone() { return this.state.baseArts * 6 + this.newCount(); }
+  dueTasks() { return Math.max(0, (this.state.day - this.state.planStart) * 3); }
+  balance() { return this.newCount() - this.dueTasks(); }
+
+  toggle(a, i) {
+    const k = a + "-" + i;
+    if (this.state.done[k]) { this.setState({ dialog: { type: "undo", a, i } }); return; }
+    const stamp = this.fmtShort(this.state.day) + " " + this.hhmm();
+    this.setState(s => ({ done: { ...s.done, [k]: stamp }, log: [{ when: stamp, what: "第 " + a + " 篇 · " + NAMES[i - 1], tag: this.balance() >= 0 ? "提前" : "补记" }, ...s.log].slice(0, 12) }));
+  }
+  hhmm() { const m = this.state.mins % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); }
+  fillNext(n) { let left = n; const add = {}; const logs = []; const stamp = this.fmtShort(this.state.day) + " " + this.hhmm();
+    for (let a = this.state.baseArts + 1; a <= 42 && left > 0; a++) for (let i = 1; i <= 6 && left > 0; i++) {
+      const k = a + "-" + i; if (!this.state.done[k] && !add[k]) { add[k] = stamp; logs.push({ when: stamp, what: "第 " + a + " 篇 · " + NAMES[i - 1], tag: "完成" }); left--; }
+    }
+    this.setState(s => ({ done: { ...s.done, ...add }, log: [...logs.reverse(), ...s.log].slice(0, 12) }));
+  }
+
+  renderVals() {
+    const s = this.state, bal = this.balance(), cur = this.curArt(), cd = this.artDone(cur);
+    const total = this.totalDone(), pct = (total / 252 * 100).toFixed(2);
+    const credDays = (bal / 3);
+    const remain = 252 - total, etaOff = s.day + Math.max(0, Math.ceil(remain / 3) - (bal > 0 ? 0 : 0));
+    const basePlanEndOff = s.planStart + (42 - s.planArt + 1) * 2 - 1;
+    const plan = this.planFor(s.day) || { art: cur, phase: 1 };
+    const grp = (from) => [from, from + 1, from + 2].map(i => {
+      const on = this.isDone(cur, i), next = !on && cd < 6 && this.firstOpen(cur) === i;
+      return {
+        name: NAMES[i - 1], mark: on ? "✓" : "", stamp: on ? "完成于 " + s.done[cur + "-" + i] : "未完成",
+        bg: on ? "rgba(127,180,201,.08)" : next ? "rgba(127,180,201,.1)" : "rgba(233,227,214,.035)",
+        border: next ? "rgba(127,180,201,.3)" : "transparent",
+        dotBg: on ? INK : "transparent", dotBorder: on ? INK : next ? INK : "rgba(233,227,214,.22)",
+        color: on ? "rgba(233,227,214,.5)" : "rgba(233,227,214,.9)",
+        tag: on ? "已完成" : next ? "NEXT" : "", tagColor: on ? "rgba(233,227,214,.3)" : INK,
+        onTap: () => this.toggle(cur, i)
+      };
+    });
+    const segs = [1, 2, 3, 4, 5, 6].map(i => ({ bg: this.isDone(cur, i) ? INK : "rgba(233,227,214,.18)" }));
+    const first = this.firstOpen(cur);
+    const nav = [["today", "今日"], ["calendar", "月历"], ["progress", "进度"], ["settings", "设置"]].map(([k, t]) => ({
+      t, dot: s.screen === k || (k === "today" && s.screen === "article") ? GOLD : "transparent",
+      color: s.screen === k ? SAND : "rgba(233,227,214,.45)", onTap: () => this.setState({ screen: k, sheet: null })
+    }));
+    return {
+      clock: this.hhmm(), dateLine: this.fmt(s.day) + " " + this.wk(s.day) + " · " + this.hhmm() + " 北京",
+      headline: total >= 252 ? "全部读完了" : cd === 0 ? "今天开始第 " + cur + " 篇的第 " + plan.phase + " 天" : cd < 6 ? "第 " + cur + " 篇还剩 " + (6 - cd) + " 项" : "第 " + cur + " 篇已完成",
+      isSetup: s.screen === "setup", isDone: s.screen === "done", isToday: s.screen === "today", isArticle: s.screen === "article", isCal: s.screen === "calendar", isProg: s.screen === "progress", isSet: s.screen === "settings",
+      showNav: s.screen !== "setup" && s.screen !== "done",
+      pct, pctW: (total / 252 * 100).toFixed(2) + "%", creditW: Math.max(0, bal) / 252 * 100 + "%",
+      totalDone: total, fullArts: this.fullArts(), curArt: cur, curDone: cd, curPct: (cd / 6 * 100).toFixed(2), curPctW: (cd / 6 * 100) + "%", curSegs: segs,
+      ringGradient: "conic-gradient(from -90deg," + INK + " 0turn " + (total / 252) + "turn,rgba(211,164,108,.55) " + (total / 252) + "turn " + ((total + Math.max(0, bal)) / 252) + "turn,rgba(233,227,214,.08) " + ((total + Math.max(0, bal)) / 252) + "turn 1turn)",
+      hasCredit: bal >= 0, hasDeficit: bal < 0,
+      creditBadge: bal === 0 ? "0" : "+" + (bal / 3).toFixed(bal % 3 ? 1 : 0), creditTitle: bal === 0 ? "正好跟上计划" : "你已经领先计划 " + (bal / 3).toFixed(bal % 3 ? 1 : 0) + " 天",
+      creditSub: bal === 0 ? "今天完成 3 项就能继续保持" : "原定 " + this.fmt(basePlanEndOff) + " 读完，现在预计 " + this.fmt(etaOff),
+      deficit: Math.max(0, -bal), deficitBadge: "−" + Math.max(0, -bal), deficitFrom: this.fmtShort(Math.max(0, s.day - Math.ceil(-bal / 3))),
+      groupALabel: "第一天 · 3 项" + (plan.phase === 1 ? "（今日计划）" : ""), groupBLabel: "第二天 · 3 项" + (plan.phase === 2 ? "（今日计划）" : "（可提前）"),
+      groupA: grp(1), groupB: grp(4), allTasks: [1, 2, 3, 4, 5, 6].map(i => grp(i <= 3 ? 1 : 4)[(i - 1) % 3]),
+      artPlanLine: this.fmt(s.planStart + (cur - s.planArt) * 2) + " 起两天完成",
+      footHint: cd === 6 ? "本篇完成，可以直接开始第 " + (cur + 1) + " 篇" : bal > 0 ? "有额度在手，明天休息也不会掉进度" : "顺序不限，先做哪一项都可以",
+      primaryLabel: total >= 252 ? "查看完成页" : cd === 6 ? "开始第 " + (cur + 1) + " 篇" : "完成「" + NAMES[first - 1] + "」",
+      primary: () => { if (total >= 252) this.setState({ screen: "done" }); else this.toggle(cur, first); },
+      nav,
+      monthLabel: (this.dateAt(0).getUTCMonth() + 1 + s.monthOff) + " 月", yearLabel: "2026",
+      prevMonth: () => this.setState(p => ({ monthOff: p.monthOff - 1 })), nextMonth: () => this.setState(p => ({ monthOff: p.monthOff + 1 })),
+      weekNames: ["一", "二", "三", "四", "五", "六", "日"].map(t => ({ t })),
+      days: this.buildMonth(),
+      monthDone: this.monthDoneCount(), creditDays: (bal / 3).toFixed(bal % 3 ? 1 : 0),
+      creditCardBg: bal >= 0 ? "linear-gradient(180deg,rgba(211,164,108,.14),rgba(211,164,108,.05))" : "rgba(165,100,60,.14)",
+      creditCardBorder: bal >= 0 ? "rgba(211,164,108,.22)" : "rgba(196,116,70,.4)",
+      creditCardLabel: bal >= 0 ? "rgba(211,164,108,.75)" : "rgba(233,180,137,.8)", creditCardText: bal >= 0 ? GOLD : "#e9b489",
+      deficitColor: bal < 0 ? "#e9b489" : SAND,
+      creditNote: bal > 0 ? "额度 +" + bal + " 项" : bal < 0 ? "缺额 " + (-bal) + " 项" : "与计划齐平",
+      artGrid: Array.from({ length: 42 }, (_, k) => {
+        const a = k + 1, d = a <= s.baseArts ? 6 : this.artDone(a);
+        return { n: a, bg: d === 6 ? "rgba(127,180,201,.85)" : d > 0 ? "rgba(127,180,201,.22)" : "transparent", border: d > 0 ? "transparent" : "rgba(233,227,214,.12)", color: d === 6 ? "#14161c" : "rgba(233,227,214,.55)" };
+      }),
+      basePlanEta: this.fmt(basePlanEndOff), eta: this.fmt(etaOff),
+      etaNote: remain === 0 ? "全部完成。" : bal > 0 ? "按现在的速度会提前 " + (basePlanEndOff - etaOff) + " 天完成。重新排期会把剩余计划整体前移，额度归零。" : bal < 0 ? "有缺额，重新排期会把剩余计划整体顺延，缺额清零，原记录保留。" : "与基础计划一致。",
+      history: s.log, noHistory: s.log.length === 0,
+      lastFullArt: this.fullArts(),
+      goSettings: () => this.setState({ screen: "settings" }), goProgress: () => this.setState({ screen: "progress" }), goArticle: () => this.setState({ screen: "article" }), goToday: () => this.setState({ screen: "today" }),
+      startSetup: () => this.setState({ screen: "setup", setupDone: s.baseArts }),
+      setupDone: s.setupDone, setupNext: s.setupDone + 1, setupRemain: 42 - s.setupDone, setupDays: (42 - s.setupDone) * 2, setupEta: this.fmt(s.day + (42 - s.setupDone) * 2 - 1),
+      incStart: () => this.setState(p => ({ setupDone: Math.min(41, p.setupDone + 1) })), decStart: () => this.setState(p => ({ setupDone: Math.max(0, p.setupDone - 1) })),
+      finishSetup: () => this.setState(p => ({ screen: "today", baseArts: p.setupDone, planArt: p.setupDone + 1, planStart: p.day, done: {}, log: [] })),
+      doneSpan: Math.max(1, s.day - s.planStart + 1), doneAhead: Math.max(0, basePlanEndOff - s.day),
+      makeup: () => this.fillNext(Math.max(1, -bal)), askReschedule: () => this.setState({ dialog: { type: "resch" } }), askResetArt: () => this.setState({ dialog: { type: "resetArt" } }),
+      demoOverdue: () => this.setState(p => ({ day: p.day + 4, screen: "today" })), demoAhead: () => { this.fillNext(6); this.setState({ screen: "today" }); },
+      demoFinish: () => this.fillNext(252), demoReset: () => this.setState(SEED()),
+      demoBtns: [
+        { k: "01", t: "完成最早未完成的一项", hint: "+1 项", onTap: () => this.fillNext(1) },
+        { k: "02", t: "完成今日 3 项", hint: "第一天", onTap: () => this.fillNext(3) },
+        { k: "03", t: "提前做完整篇（6 项）", hint: "额度 +2 天", onTap: () => this.fillNext(6) },
+        { k: "04", t: "进入第二天", hint: "+1 天", onTap: () => this.setState(p => ({ day: p.day + 1 })) },
+        { k: "05", t: "空过 2 天（制造逾期）", hint: "额度扣减", onTap: () => this.setState(p => ({ day: p.day + 2 })) },
+        { k: "06", t: "打开月历", hint: "状态色", onTap: () => this.setState({ screen: "calendar" }) },
+        { k: "07", t: "打开进度页", hint: "两条进度", onTap: () => this.setState({ screen: "progress" }) },
+        { k: "08", t: "首次设置向导", hint: "重置计划", onTap: () => this.setState({ screen: "setup", setupDone: s.baseArts }) },
+        { k: "09", t: "跳到 42 篇全部完成", hint: "完成页", onTap: () => { this.fillNext(252); this.setState({ screen: "done" }); } },
+        { k: "10", t: "重置原型", hint: "初始状态", onTap: () => this.setState(SEED()) }
+      ],
+      ...this.sheetVals(), ...this.dialogVals()
+    };
+  }
+  firstOpen(a) { for (let i = 1; i <= 6; i++) if (!this.isDone(a, i)) return i; return 6; }
+  monthDoneCount() {
+    const base = this.dateAt(0), pre = String(base.getUTCMonth() + 1 + this.state.monthOff).padStart(2, "0") + ".";
+    let c = 0; for (const k in this.state.done) if (String(this.state.done[k]).startsWith(pre)) c++; return c;
+  }
+  buildMonth() {
+    const s = this.state, base = this.dateAt(0), y = base.getUTCFullYear(), m = base.getUTCMonth() + s.monthOff;
+    const first = new Date(Date.UTC(y, m, 1)), nDays = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const lead = (first.getUTCDay() + 6) % 7, out = [], bal = this.balance();
+    for (let i = 0; i < lead; i++) out.push({ blank: true, n: "", art: "", numColor: "transparent", dotBg: "transparent", dotBorder: "transparent", cellBg: "transparent", onTap: () => {} });
+    for (let n = 1; n <= nDays; n++) {
+      const off = Math.round((Date.UTC(y, m, n) - D0) / 86400000), p = this.planFor(off);
+      let st = "plan", art = p ? p.art : 0, ph = p ? p.phase : 1, dn = 0;
+      if (!p) { st = off < 0 ? "past" : "plan"; }
+      else {
+        const idx = ph === 1 ? [1, 2, 3] : [4, 5, 6];
+        dn = idx.filter(i => this.isDone(art, i) && s.done[art + "-" + i].startsWith(this.fmtShort(off))).length;
+        const allDone = idx.every(i => this.isDone(art, i));
+        if (off === s.day) st = dn === 3 ? "done" : dn > 0 ? "partial" : "today";
+        else if (off < s.day) st = dn === 3 ? "done" : dn > 0 ? "partial" : allDone ? "early" : bal >= 0 ? "covered" : "missing";
+        else st = allDone ? "early" : "plan";
+      }
+      const S = {
+        past: { numColor: "rgba(233,227,214,.45)", dotBg: "rgba(127,180,201,.45)", dotBorder: "rgba(127,180,201,.45)", cellBg: "transparent" },
+        done: { numColor: "rgba(233,227,214,.8)", dotBg: INK, dotBorder: INK, cellBg: "transparent" },
+        partial: { numColor: "rgba(233,227,214,.8)", dotBg: "linear-gradient(90deg," + INK + " 50%,transparent 50%)", dotBorder: INK, cellBg: "transparent" },
+        early: { numColor: GOLD, dotBg: "rgba(211,164,108,.28)", dotBorder: GOLD, cellBg: "transparent" },
+        covered: { numColor: "rgba(211,164,108,.75)", dotBg: "rgba(211,164,108,.18)", dotBorder: "rgba(211,164,108,.7)", cellBg: "transparent" },
+        missing: { numColor: "#e9b489", dotBg: "rgba(165,100,60,.2)", dotBorder: WARN, cellBg: "rgba(165,100,60,.08)" },
+        today: { numColor: SAND, dotBg: "rgba(233,227,214,.1)", dotBorder: "rgba(233,227,214,.55)", cellBg: "rgba(233,227,214,.06)" },
+        plan: { numColor: "rgba(233,227,214,.3)", dotBg: "transparent", dotBorder: "rgba(233,227,214,.13)", cellBg: "transparent" }
+      }[st];
+      out.push({ blank: false, n: String(n), art: p ? art + (ph === 1 ? "·¹" : "·²") : "", ...S, onTap: () => this.setState({ sheet: { off, st } }) });
+    }
+    return out;
+  }
+  sheetVals() {
+    const sh = this.state.sheet;
+    if (!sh) return { sheetOpen: false, sheetTasks: [], sheetTitle: "", sheetPlan: "", sheetTag: "", sheetNote: "", sheetActionLabel: "", sheetAction: () => {}, closeSheet: () => {}, sheetTagBg: "transparent", sheetTagBorder: "transparent", sheetTagDot: "transparent", sheetTagText: SAND };
+    const p = this.planFor(sh.off), idx = p ? (p.phase === 1 ? [1, 2, 3] : [4, 5, 6]) : [];
+    const TAG = { done: ["按计划完成", INK], partial: ["部分完成", INK], early: ["已提前完成", GOLD], covered: ["额度已覆盖", GOLD], missing: ["缺额待补", WARN], today: ["今天", SAND], plan: ["计划中", "rgba(233,227,214,.5)"], past: ["已完成", INK] }[sh.st];
+    return {
+      sheetOpen: true, closeSheet: () => this.setState({ sheet: null }),
+      sheetTitle: this.fmt(sh.off) + " " + this.wk(sh.off),
+      sheetPlan: p ? "原计划 · 第 " + p.art + " 篇 第" + (p.phase === 1 ? "一" : "二") + "天 · 3 项" : "计划开始前",
+      sheetTag: TAG[0], sheetTagText: TAG[1], sheetTagDot: TAG[1], sheetTagBg: "rgba(233,227,214,.06)", sheetTagBorder: "rgba(233,227,214,.14)",
+      sheetTasks: idx.map(i => ({ name: NAMES[i - 1], stamp: this.isDone(p.art, i) ? this.state.done[p.art + "-" + i] : "未完成", dotBg: this.isDone(p.art, i) ? INK : "transparent", dotBorder: this.isDone(p.art, i) ? INK : "rgba(233,227,214,.22)", onTap: () => this.toggle(p.art, i) })),
+      sheetNote: sh.st === "covered" ? "这天的任务已被之前的提前完成覆盖，可以休息。" : sh.st === "missing" ? "没有额度可扣，这天进入缺额。补打卡会优先补这里。" : sh.st === "early" ? "这天的任务提前做掉了，计划日期保留不变。" : "点任意一项可以补记或撤销，时间戳会记为实际操作日。",
+      sheetActionLabel: sh.st === "missing" ? "补上这一天" : "全部标记完成",
+      sheetAction: () => { idx.forEach(i => { if (!this.isDone(p.art, i)) this.toggle(p.art, i); }); this.setState({ sheet: null }); }
+    };
+  }
+  dialogVals() {
+    const d = this.state.dialog, close = () => this.setState({ dialog: null });
+    if (!d) return { dialogOpen: false, dialogTitle: "", dialogBody: "", dialogBtn: "", dialogBtnBg: SAND, closeDialog: close, confirmDialog: close };
+    if (d.type === "undo") return {
+      dialogOpen: true, closeDialog: close, dialogTitle: "撤销这一项打卡？",
+      dialogBody: "第 " + d.a + " 篇 · " + NAMES[d.i - 1] + "。撤销后整体进度会减少 1 项" + (this.artDone(d.a) === 6 ? "，完整篇数从 " + this.fullArts() + " 回退到 " + (this.fullArts() - 1) : "") + "，记录会保留在历史里。",
+      dialogBtn: "撤销", dialogBtnBg: "#e9b489",
+      confirmDialog: () => this.setState(s => { const nd = { ...s.done }; delete nd[d.a + "-" + d.i]; return { done: nd, dialog: null, log: [{ when: this.fmtShort(s.day) + " " + this.hhmm(), what: "撤销 第 " + d.a + " 篇 · " + NAMES[d.i - 1], tag: "撤销" }, ...s.log].slice(0, 12) }; })
+    };
+    if (d.type === "resetArt") return {
+      dialogOpen: true, closeDialog: close, dialogTitle: "撤销第 " + this.fullArts() + " 篇的完成？",
+      dialogBody: "会取消该篇 6 项的打卡：完整篇数 " + this.fullArts() + " / 42 → " + (this.fullArts() - 1) + " / 42，小任务 " + this.totalDone() + " / 252 → " + (this.totalDone() - 6) + " / 252。此操作可以再次勾选恢复。",
+      dialogBtn: "确认撤销", dialogBtnBg: "#e9b489",
+      confirmDialog: () => { const a = this.fullArts(); this.setState(s => { const nd = { ...s.done }; for (let i = 1; i <= 6; i++) delete nd[a + "-" + i]; return { done: nd, dialog: null, baseArts: Math.min(s.baseArts, a - 1), log: [{ when: this.fmtShort(s.day) + " " + this.hhmm(), what: "撤销第 " + a + " 篇（6 项）", tag: "撤销" }, ...s.log].slice(0, 12) }; }); }
+    };
+    const bal = this.balance();
+    return {
+      dialogOpen: true, closeDialog: close, dialogTitle: "根据当前进度重新排期？",
+      dialogBody: bal >= 0 ? "把剩余 " + (42 - this.curArt() + 1) + " 篇从今天重新排布，额度归零，预计完成日提前到 " + this.fmt(this.state.day + Math.ceil((252 - this.totalDone()) / 3)) + "。已完成记录和原始完成时间都不会变。" : "把剩余计划整体顺延，缺额清零，从今天重新开始计算。已完成记录保留，计划日期会往后移。",
+      dialogBtn: "重新排期", dialogBtnBg: SAND,
+      confirmDialog: () => this.setState(s => ({ planStart: s.day, planArt: this.curArt(), dialog: null, log: [{ when: this.fmtShort(s.day) + " " + this.hhmm(), what: "重新排期 · 从第 " + this.curArt() + " 篇起", tag: "排期" }, ...s.log].slice(0, 12) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

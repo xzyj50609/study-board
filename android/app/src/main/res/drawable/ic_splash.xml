@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动画面图形：一圈暖金弧，呼应首页主环 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,24 A30,30 0 1,1 53.9,24"
+        android:strokeColor="#33E9E3D6"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,24 A30,30 0 0,1 78.4,71.6"
+        android:strokeColor="#D3A46C"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+</vector>

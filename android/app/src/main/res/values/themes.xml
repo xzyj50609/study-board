@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 启动画面：深墨底 + 暖金环，接住 DataStore 首次读取的那一小段时间，
+         避免先闪一下 today 再跳设置向导 -->
+    <style name="Theme.Ritual.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ritual_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Ritual</item>
+    </style>
+
+    <style name="Theme.Ritual" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ritual_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+</resources>

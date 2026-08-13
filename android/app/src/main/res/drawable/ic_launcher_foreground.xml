@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用图标前景：月光蓝弧 + 暖金弧的一段进度环（自适应图标安全区 66dp） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,29 A25,25 0 1,1 53.9,29"
+        android:strokeColor="#26E9E3D6"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,29 A25,25 0 0,1 74.3,68.6"
+        android:strokeColor="#7FB4C9"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M74.3,68.6 A25,25 0 0,1 60.2,78.2"
+        android:strokeColor="#D3A46C"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+</vector>
