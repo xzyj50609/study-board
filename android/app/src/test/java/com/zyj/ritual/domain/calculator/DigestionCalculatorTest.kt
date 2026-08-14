@@ -68,4 +68,40 @@ class DigestionCalculatorTest {
         assertEquals(2, DigestionCalculator.digestionDayIndex(session, completed.plusDays(2)))
         assertEquals(4, DigestionCalculator.digestionDayIndex(session, completed.plusDays(4)))
     }
+
+    // ———————————— 恢复日 ————————————
+
+    @Test
+    fun `resumeDate 是窗口后第一个正常学习日`() {
+        // 8/13 写完，8/13..8/17 都空着，8/18 接着做
+        assertEquals(
+            completed.plusDays(5),
+            DigestionCalculator.resumeDate(completed, listOf(session)),
+        )
+        assertEquals(
+            completed.plusDays(5),
+            DigestionCalculator.resumeDate(completed.plusDays(3), listOf(session)),
+        )
+    }
+
+    @Test
+    fun `不在空档里时 resumeDate 就是当天`() {
+        val normal = completed.plusDays(10)
+        assertEquals(normal, DigestionCalculator.resumeDate(normal, listOf(session)))
+        assertEquals(normal, DigestionCalculator.resumeDate(normal, emptyList()))
+    }
+
+    @Test
+    fun `空档里又写一套卷 恢复日一路往后推`() {
+        val second = session.copy(
+            id = 2,
+            name = "2017 年卷",
+            completedDate = completed.plusDays(2),
+        )
+        // 8/13..8/17 与 8/15..8/19 连成一片 → 8/20 才恢复
+        assertEquals(
+            completed.plusDays(7),
+            DigestionCalculator.resumeDate(completed, listOf(session, second)),
+        )
+    }
 }

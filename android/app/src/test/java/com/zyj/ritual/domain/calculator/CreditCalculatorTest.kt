@@ -187,6 +187,33 @@ class CreditCalculatorTest {
         assertEquals(today.plusDays(61), credit.expectedCompletionDate)
     }
 
+    /**
+     * v1.1 要修的那件事，用数字钉死。
+     *
+     * 场景就是用户 8 月 13 号那天：写了一整套卷，当天的阅读任务一项没勾。
+     * v1.0 装上去看到的是一张"缺 3 项"的暗铜卡——超额干完一整套卷，却被判成欠账。
+     * 登记那套卷之后，那几天不再是计划日，欠账必须自己消失。
+     */
+    @Test
+    fun `登记整套卷之后 那几天的欠账消失`() {
+        val today = startDate.plusDays(3)
+        val records = importedRecords()  // 计划开始后一项都没做
+
+        val before = CreditCalculator.calculate(plan, cal, records, today)
+        assertEquals("前提没成立：本来就该是缺额", CreditState.DEFICIT, before.state)
+        assertTrue(before.deficitTaskCount > 0)
+        assertNotNull(before.earliestDeficitDate)
+
+        // 8/5 起这 4 天都被整套卷的空档罩住
+        val paused = (0L..3L).map { startDate.plusDays(it) }.toSet()
+        val pausedCal = PlanCalendar.create(plan, paused)
+        val after = CreditCalculator.calculate(plan, pausedCal, records, today, paused)
+
+        assertEquals("登记了整套卷，欠账却还在", CreditState.EVEN, after.state)
+        assertEquals(0, after.deficitTaskCount)
+        assertNull(after.earliestDeficitDate)
+    }
+
     // ——— R18：基础计划完成日 ———
 
     @Test

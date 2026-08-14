@@ -8,8 +8,8 @@ import com.zyj.ritual.data.store.VocabConfigStore
 import com.zyj.ritual.domain.vocab.VocabCalculator
 import com.zyj.ritual.domain.vocab.VocabCalendarResult
 import com.zyj.ritual.domain.vocab.VocabConfig
-import com.zyj.ritual.domain.vocab.RateChange
 import com.zyj.ritual.domain.vocab.VocabRecord
+import com.zyj.ritual.domain.vocab.VocabSetupCalculator
 import com.zyj.ritual.domain.vocab.VocabState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -103,48 +103,32 @@ class VocabRepository(
     }
 
     /**
-     * 保存背词设置。若给了 planStartDate，则同时把「计划线」校准到那一天：
-     * - 计划起算日 = planStartDate；
-     * - 计划起点量 = initialDone + planStartDate 之前的新词累计；
-     * - 之前的历史进度仍计入 doneWords，但不再被新计划回推成欠账。
-     * planStartDate 为空 = 清除分段/起点量，回到旧算法。
+     * 按「锚点」保存背词设置：用户给的是
+     * 「哪天起算 / 那天已背多少 / 从那天起每天多少 / 词书多大 / 考试哪天」，
+     * `initialDone` 这类内部量由 [VocabSetupCalculator] 反推，不再让用户去猜。
+     *
+     * 记录（VocabRecord）一条都不动——设置只改计划口径，不改既成事实。
      */
     suspend fun saveSetup(
         bookName: String,
         totalWords: Int,
-        initialDone: Int,
+        planStartDate: String,
+        planStartDone: Int,
         dailyWords: Int,
         examDate: String,
-        planStartDate: String?,
     ) {
-        require(dailyWords > 0) { "每日新词必须大于 0" }
-        require(totalWords > 0) { "词书总量必须大于 0" }
-
         val config = configStore.getConfig()
-        var updated = config.copy(
-            bookName = bookName.ifBlank { config.bookName },
+        val records = vocabDao.getAll().map { it.toDomain() }
+        val updated = VocabSetupCalculator.applyAnchor(
+            current = config,
+            records = records,
+            bookName = bookName,
             totalWords = totalWords,
-            initialDone = initialDone,
+            planStartDate = planStartDate,
+            planStartDone = planStartDone,
             dailyWords = dailyWords,
-            examDate = examDate.ifBlank { config.examDate },
+            examDate = examDate,
         )
-
-        if (!planStartDate.isNullOrBlank()) {
-            require(planStartDate.matches(Regex("""\d{4}-\d{2}-\d{2}"""))) {
-                "计划起算日格式应为 YYYY-MM-DD"
-            }
-            val records = recordsFlow().first()
-            val newWordsBefore = records
-                .filter { it.kind != "backlog" && it.date < planStartDate }
-                .sumOf { it.words }
-            updated = updated.copy(
-                rateChanges = listOf(RateChange(from = planStartDate, dailyWords = dailyWords)),
-                planStartDone = updated.initialDone + newWordsBefore,
-            )
-        } else {
-            updated = updated.copy(rateChanges = emptyList(), planStartDone = null)
-        }
-
         configStore.saveConfig(updated)
     }
 

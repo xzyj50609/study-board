@@ -8,6 +8,7 @@ import com.zyj.ritual.domain.vocab.VocabCalculator
 import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.domain.vocab.VocabRecord
 import com.zyj.ritual.ui.screens.vocab.VocabCalendarScreenContent
+import com.zyj.ritual.ui.screens.vocab.VocabSetupScreenContent
 import com.zyj.ritual.ui.theme.RitualTheme
 import java.time.LocalDate
 
@@ -189,4 +190,62 @@ class VocabScreenshots {
             VocabCalendarScreenContent(aggregate = buildVocabAggregate(records))
         }
     }
+
+    // ════════════════════════════════════════════════════════════
+    //  设置页
+    //
+    //  上一版这页是全 App 唯一用 Material 原生 OutlinedTextField 的地方，
+    //  在一片米白纸感里冒出一圈紫色描边，用户的原话是"跟整个 APP 的风格根本不搭"。
+    //  界面好不好看不能靠用户装机肉眼兜底，所以这一页也进截图关卡。
+    // ════════════════════════════════════════════════════════════
+
+    @PreviewTest
+    @Preview(name = "背词设置-正常", widthDp = 390, heightDp = 1400, showBackground = true)
+    @Composable
+    fun vocabSetupNormal() {
+        RitualTheme {
+            VocabSetupScreenContent(
+                aggregate = buildVocabAggregate(SETUP_RECORDS, SETUP_CONFIG),
+                isSaving = false,
+                onSave = {},
+                onBack = {},
+            )
+        }
+    }
+
+    /** 填出一组算不出来的数时，错误必须写在屏幕上、保存按钮要拦住。 */
+    @PreviewTest
+    @Preview(name = "背词设置-数字矛盾", widthDp = 390, heightDp = 1400, showBackground = true)
+    @Composable
+    fun vocabSetupInvalid() {
+        RitualTheme {
+            VocabSetupScreenContent(
+                // 词书总量只有 100，但记录加起来早就超了
+                aggregate = buildVocabAggregate(SETUP_RECORDS, SETUP_CONFIG.copy(totalWords = 100)),
+                isSaving = false,
+                onSave = {},
+                onBack = {},
+            )
+        }
+    }
 }
+
+/** 用户真实数据的形状：2416 词的词书，8/2 起 40/天 */
+private val SETUP_CONFIG = VocabConfig(
+    totalWords = 2416,
+    initialDone = 380,
+    dailyWords = 40,
+    planStartDone = 420,
+    rateChanges = listOf(com.zyj.ritual.domain.vocab.RateChange("2026-08-02", 40)),
+    examDate = "2026-12-19",
+)
+
+private val SETUP_RECORDS = listOf(
+    VocabRecord("2026-07-30", 20, "new"),
+    VocabRecord("2026-07-31", 20, "new"),
+    VocabRecord("2026-08-02", 40, "new"),
+    VocabRecord("2026-08-03", 40, "new"),
+    VocabRecord("2026-08-04", 40, "new"),
+    VocabRecord("2026-08-05", 40, "new"),
+    VocabRecord("2026-08-06", 40, "new"),
+)

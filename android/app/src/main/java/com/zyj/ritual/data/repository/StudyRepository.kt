@@ -25,6 +25,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 
 private const val STATE_LOG_TAG = "RitualState"
 
+/** v1.0 承诺补记、却从来没写进代码的那套卷 */
+private val LEGACY_PAPER_DATE: java.time.LocalDate = java.time.LocalDate.of(2026, 8, 13)
+private const val LEGACY_PAPER_NAME = "2016 年卷"
+
 /**
  * 唯一数据入口。
  *
@@ -91,7 +95,12 @@ class StudyRepository(
             val progress = ProgressCalculator.calculate(plan, records)
             val credit = CreditCalculator.calculate(plan, calendar, records, today, pausedDates)
             val todayPaper = DigestionCalculator.sessionCovering(today, paperSessions)
-            val copy = TodayCopyResolver.resolve(plan, calendar, records, progress, credit, today, todayPaper)
+            val resumeDate = if (todayPaper != null) {
+                DigestionCalculator.resumeDate(today, paperSessions)
+            } else null
+            val copy = TodayCopyResolver.resolve(
+                plan, calendar, records, progress, credit, today, todayPaper, resumeDate
+            )
 
             TodayState(
                 plan = plan,
@@ -104,6 +113,7 @@ class StudyRepository(
                 today = today,
                 pausedDates = pausedDates,
                 paperSessions = paperSessions,
+                resumeDate = resumeDate,
             )
         }
     }
@@ -219,6 +229,36 @@ class StudyRepository(
         )
     }
 
+    /**
+     * 一次性补记 v1.0 漏掉的那套卷。
+     *
+     * 背景：v1.0 上线时说好「2016 年卷记为 2026-08-13 完成」，但代码里没有任何地方做，
+     * 结果用户一装上就是「8/13 的阅读任务没做 → 欠账 → 暗铜色缺额卡」。
+     * 这个函数把那条既成事实补进去，让空档从 8/13 当天算起。
+     *
+     * 三道闸门，缺一不可：
+     * 1. 只做一次（PlanStore 的标记）——否则用户撤销后会被重新插回来；
+     * 2. 已经有任何一套卷了就不补——用户可能自己先记过，重复会白放四天假；
+     * 3. 计划开始日晚于那天就不补——新装的用户不该凭空多出一套别人的卷子。
+     *
+     * 计划还没建过时直接返回且**不落标记**，等用户设置完计划后下次启动再判断。
+     */
+    suspend fun seedLegacyPaperSessionIfNeeded() {
+        if (planStore.isLegacyPaperSeeded()) return
+        val plan = planStore.getPlan() ?: return
+
+        val alreadyHasSessions = paperSessionDao.getAll().isNotEmpty()
+        val planCoversThatDay = !plan.planStartDate.isAfter(LEGACY_PAPER_DATE)
+
+        if (!alreadyHasSessions && planCoversThatDay) {
+            registerPaperSession(
+                name = LEGACY_PAPER_NAME,
+                completedDate = LEGACY_PAPER_DATE,
+            )
+        }
+        planStore.markLegacyPaperSeeded()
+    }
+
     /** 撤销一套卷登记（消化期随之消失）。 */
     suspend fun undoPaperSession(id: Long) {
         val target = paperSessionDao.getAll().firstOrNull { it.id == id }
@@ -327,6 +367,8 @@ data class TodayState(
     val pausedDates: Set<java.time.LocalDate>,
     /** 全部整套卷登记记录 */
     val paperSessions: List<PaperSession>,
+    /** 今天在空档里时，计划恢复的那一天；不在空档里为 null */
+    val resumeDate: java.time.LocalDate? = null,
 )
 
 /**

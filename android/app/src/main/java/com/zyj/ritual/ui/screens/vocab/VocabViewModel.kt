@@ -47,23 +47,23 @@ class VocabViewModel(
         }
     }
 
-    /** 保存背词设置；计划起算日非空时自动把计划线校准到那天。 */
+    /** 按锚点保存背词设置（内部量由 VocabSetupCalculator 反推）。 */
     fun saveSetup(
         bookName: String,
         totalWords: Int,
-        initialDone: Int,
+        planStartDate: String,
+        planStartDone: Int,
         dailyWords: Int,
         examDate: String,
-        planStartDate: String?,
     ) {
         viewModelScope.launch {
             vocabRepository.saveSetup(
                 bookName = bookName,
                 totalWords = totalWords,
-                initialDone = initialDone,
+                planStartDate = planStartDate,
+                planStartDone = planStartDone,
                 dailyWords = dailyWords,
                 examDate = examDate,
-                planStartDate = planStartDate,
             )
         }
     }

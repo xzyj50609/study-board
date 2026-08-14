@@ -513,11 +513,29 @@ private fun DaySheetContent(
         // 读文章那部分。非计划日只有一句话，但背词那段照样要出——
         // 非计划日一样能背词，不能因为文章没排就把背词记录也藏起来
         if (!dayPlan.isPlanDay) {
+            // 空档日必须自己说清"为什么这天是空的"。
+            // 只写「非计划日」的话，用户看到的就是一个没有任何理由的空白格——
+            // 跟"排错了"长得一模一样，他没法判断 App 是对的还是坏的。
+            val paper = com.zyj.ritual.domain.calculator.DigestionCalculator
+                .sessionCovering(date, state.paperSessions)
             Text(
-                if (date < plan.planStartDate) "计划尚未开始" else "非计划日",
+                when {
+                    date < plan.planStartDate -> "计划尚未开始"
+                    paper != null -> "整套卷换来的空档 · ${paper.name}"
+                    else -> "非计划日"
+                },
                 style = RitualTypography.bodySmall,
                 modifier = Modifier.padding(top = RitualSpace.sectionGap),
             )
+            if (paper != null) {
+                val resume = com.zyj.ritual.domain.calculator.DigestionCalculator
+                    .resumeDate(date, state.paperSessions)
+                Text(
+                    "这天不排任务、不算欠账。${resume.monthValue} 月 ${resume.dayOfMonth} 日恢复计划。",
+                    style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
         } else {
             Text(
                 "原计划 · 第 ${dayPlan.articleIndex} 篇 第 ${dayPlan.phase} 天 · ${dayPlan.taskIndices.size} 项",

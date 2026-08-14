@@ -35,6 +35,23 @@ object DigestionCalculator {
     fun digestionDayIndex(session: PaperSession, date: LocalDate): Int =
         (date.toEpochDay() - session.completedDate.toEpochDay()).toInt()
 
+    /**
+     * 从 date 起第一个不被任何消化窗口覆盖的日子 = 计划恢复日。
+     *
+     * 用来回答用户唯一真正关心的那个问题：「那第 16 篇到底哪天做？」
+     * 相邻或重叠的多套卷会连成一片，这里一路往后走到出窗为止。
+     */
+    fun resumeDate(date: LocalDate, sessions: List<PaperSession>): LocalDate {
+        if (sessions.isEmpty()) return date
+        var d = date
+        var guard = 0
+        while (isPaused(d, sessions)) {
+            d = d.plusDays(1)
+            if (++guard > 3_650) return d  // 防御：十年封顶，理论上不会
+        }
+        return d
+    }
+
     private fun covers(session: PaperSession, date: LocalDate): Boolean {
         val start = session.completedDate.toEpochDay()
         val end = start + session.digestionDays

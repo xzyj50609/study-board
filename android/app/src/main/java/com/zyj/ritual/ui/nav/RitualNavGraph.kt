@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.zyj.ritual.RitualApp
-import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.ui.screens.article.ArticleScreen
 import com.zyj.ritual.ui.screens.calendar.CalendarScreen
 import com.zyj.ritual.ui.screens.history.HistoryScreen
@@ -25,6 +24,7 @@ import com.zyj.ritual.ui.screens.setup.SetupViewModel
 import com.zyj.ritual.ui.screens.today.TodayScreen
 import com.zyj.ritual.ui.screens.today.TodayViewModel
 import com.zyj.ritual.ui.screens.vocab.VocabSetupScreen
+import com.zyj.ritual.ui.state.LoadingBox
 import com.zyj.ritual.ui.state.RitualStateHost
 
 /**
@@ -89,8 +89,8 @@ fun RitualNavGraph(
                     vocabState = vocabState,
                     onAddVocabWords = { words -> todayViewModel.addVocabRecord(words, "new") },
                     onAddVocabReview = { words -> todayViewModel.addVocabRecord(words, "backlog") },
-                    onRegisterPaperSession = { name ->
-                        todayViewModel.registerPaperSession(name, app.clock.today())
+                    onRegisterPaperSession = { name, completedDate ->
+                        todayViewModel.registerPaperSession(name, completedDate)
                     },
                     onUndoPaperSession = { id -> todayViewModel.undoPaperSession(id) },
                     onOpenVocabBoard = {
@@ -167,16 +167,30 @@ fun RitualNavGraph(
             )
         }
 
-        // 背词设置（此前是孤儿屏，现在补上入口）
+        // 背词设置
+        //
+        // ⚠️ 这里绝不能再给一个「写死的默认配置」当初值。
+        // 上一版是 collectAsStateWithLifecycle(initialValue = VocabConfig())：
+        // DataStore 是异步读的，首帧拿到的必然是那份默认值（1883 词 / 起点 380 / 每天 20），
+        // 表单把首帧的值 remember 住就再也不更新了。用户只改了日期一按保存，
+        // 真实的 2416 就被悄悄写回 1883——屏幕上没有任何地方会报错，
+        // 只是所有百分比第二天全变了。
+        // 现在改成：真配置没到之前，这个屏幕根本不构造。
         composable(Routes.VOCAB_SETUP) {
-            val config by app.vocabRepository.configFlow()
-                .collectAsStateWithLifecycle(initialValue = VocabConfig())
-            VocabSetupScreen(
-                currentConfig = config,
-                vocabRepository = app.vocabRepository,
-                onSaved = { navController.popBackStack() },
-                onBack = { navController.popBackStack() },
-            )
+            val vocabState by app.vocabRepository.aggregateStateFlow()
+                .collectAsStateWithLifecycle(initialValue = null)
+
+            val aggregate = vocabState
+            if (aggregate == null) {
+                LoadingBox(label = "正在读你存的背词设置…")
+            } else {
+                VocabSetupScreen(
+                    aggregate = aggregate,
+                    vocabRepository = app.vocabRepository,
+                    onSaved = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
 
         composable(Routes.SETTINGS) {

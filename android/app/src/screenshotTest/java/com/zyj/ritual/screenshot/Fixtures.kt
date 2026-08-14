@@ -3,11 +3,13 @@ package com.zyj.ritual.screenshot
 import com.zyj.ritual.data.repository.TodayState
 import com.zyj.ritual.data.repository.VocabAggregateState
 import com.zyj.ritual.domain.calculator.CreditCalculator
+import com.zyj.ritual.domain.calculator.DigestionCalculator
 import com.zyj.ritual.domain.calculator.ProgressCalculator
 import com.zyj.ritual.domain.calculator.TodayCopyResolver
 import com.zyj.ritual.domain.calendar.PlanCalendar
 import com.zyj.ritual.domain.model.HistoryEvent
 import com.zyj.ritual.domain.model.HistoryEventType
+import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.Plan
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
@@ -70,6 +72,66 @@ internal fun buildState(doneTasks: Int, withHistory: Boolean = false): TodayStat
         today = TODAY,
         pausedDates = emptySet(),
         paperSessions = emptyList(),
+    )
+}
+
+/**
+ * 写过一套整卷、今天正处在空档里的今日页。
+ *
+ * 这一屏是 v1.1 最要紧的验收对象：装上 v1.0 之后用户看到的是一张
+ * 暗铜色的"缺 N 项"，而他明明超额干完了一整套卷。所以这张图要能一眼确认：
+ * 顶上是金色的空档说明（含哪天接着做），不是红/铜色的欠账警告。
+ *
+ * @param paperCompletedDate 卷子完成日，默认设成"今天的前两天"，
+ * 于是今天正好落在空档中间。
+ */
+internal fun buildStateWithPaper(
+    doneTasks: Int,
+    paperCompletedDate: LocalDate = TODAY.minusDays(2),
+): TodayState {
+    val plan = PLAN
+    val records = (0 until doneTasks).map { i ->
+        val article = i / plan.tasksPerArticle + 1
+        val task = i % plan.tasksPerArticle + 1
+        val plannedDate = plan.planStartDate.plusDays((i / plan.tasksPerDay).toLong())
+        TaskRecord(
+            id = TaskRecord.makeId(article, task),
+            articleIndex = article,
+            taskIndex = task,
+            completedAt = plannedDate.atTime(21, 0).toInstant(ZoneOffset.ofHours(8)),
+            plannedDate = plannedDate,
+            source = RecordSource.CHECKED,
+        )
+    }
+    val sessions = listOf(
+        PaperSession(
+            id = 1,
+            name = "2016 年卷",
+            completedDate = paperCompletedDate,
+            createdAt = paperCompletedDate.atTime(22, 30).toInstant(ZoneOffset.ofHours(8)),
+        )
+    )
+    val paused = DigestionCalculator.pausedDates(sessions)
+    val calendar = PlanCalendar.create(plan, paused)
+    val progress = ProgressCalculator.calculate(plan, records)
+    val credit = CreditCalculator.calculate(plan, calendar, records, TODAY, paused)
+    val todayPaper = DigestionCalculator.sessionCovering(TODAY, sessions)
+    val resumeDate = todayPaper?.let { DigestionCalculator.resumeDate(TODAY, sessions) }
+    val copy = TodayCopyResolver.resolve(
+        plan, calendar, records, progress, credit, TODAY, todayPaper, resumeDate
+    )
+    return TodayState(
+        plan = plan,
+        records = records,
+        history = emptyList(),
+        calendar = calendar,
+        progress = progress,
+        credit = credit,
+        copy = copy,
+        today = TODAY,
+        pausedDates = paused,
+        paperSessions = sessions,
+        resumeDate = resumeDate,
     )
 }
 

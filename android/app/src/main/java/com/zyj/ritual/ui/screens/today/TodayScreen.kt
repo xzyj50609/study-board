@@ -37,7 +37,10 @@ import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
 import com.zyj.ritual.ui.components.CreditCard
+import com.zyj.ritual.ui.components.DateFieldRow
+import com.zyj.ritual.ui.components.OutlineButton
 import com.zyj.ritual.ui.components.ProgressRing
+import com.zyj.ritual.ui.components.RitualDatePickerDialog
 import com.zyj.ritual.ui.components.SegmentedTicks
 import com.zyj.ritual.ui.components.TaskRow
 import com.zyj.ritual.ui.components.TaskRowState
@@ -79,7 +82,7 @@ fun TodayScreen(
     onAddVocabWords: (Int) -> Unit = {},
     onAddVocabReview: (Int) -> Unit = {},
     onOpenVocabBoard: () -> Unit = {},
-    onRegisterPaperSession: (String) -> Unit = {},
+    onRegisterPaperSession: (String, LocalDate) -> Unit = { _, _ -> },
     onUndoPaperSession: (Long) -> Unit = {},
 ) {
     // 撤销确认弹窗状态
@@ -153,6 +156,29 @@ fun TodayScreen(
                 .padding(horizontal = RitualSpace.screenPadding)
                 .padding(top = RitualSpace.listGap),
         )
+
+        // —— 空档说明 ——
+        // 位置刻意放在标题正下方、进度环之上：今天之所以没任务，
+        // 原因必须是用户睁眼看到的第一句话，不能藏在要滑一屏才看得见的地方。
+        val digestionNote = copy.digestionNote
+        if (digestionNote != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = RitualSpace.screenPadding)
+                    .padding(top = RitualSpace.listGap)
+                    .clip(RoundedCornerShape(RitualRadius.card))
+                    .background(RitualColors.accentGold.copy(alpha = 0.12f))
+                    .padding(14.dp),
+            ) {
+                Text(
+                    text = digestionNote,
+                    style = RitualTypography.bodyMedium,
+                    color = RitualColors.accentGold,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
 
         Spacer(Modifier.height(RitualSpace.sectionGap))
 
@@ -443,75 +469,71 @@ private fun TaskGroup(
 
 // —— 撤销确认弹窗 ——
 
+/**
+ * 整套卷登记卡。
+ *
+ * 上一版这里是一行小灰字，用户根本没看见它，于是写完卷子的事 App 一无所知，
+ * 照旧把当天的阅读任务算成欠账、糊一张暗铜色缺额卡在首页。
+ * 所以这版做成整块卡 + 满宽按钮：入口必须一眼看得到，不然这个功能等于不存在。
+ */
 @Composable
 private fun PaperSessionSection(
     state: TodayState,
-    onRegister: (String) -> Unit,
+    onRegister: (String, LocalDate) -> Unit,
     onUndo: (Long) -> Unit,
 ) {
     var showRegisterDialog by remember { mutableStateOf(false) }
-    val digestionNote = state.copy.digestionNote
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = RitualSpace.screenPadding),
+            .padding(horizontal = RitualSpace.screenPadding)
+            .clip(RoundedCornerShape(RitualRadius.cardLg))
+            .background(RitualColors.surfaceLow)
+            .padding(RitualSpace.cardPadding),
     ) {
-        // 今天是消化日时，先给一条不催人的提示
-        if (digestionNote != null) {
+        Text(
+            "写了整套英语卷？",
+            style = RitualTypography.titleMedium.copy(
+                color = RitualColors.onBg,
+                fontWeight = FontWeight.Medium,
+            ),
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "一套卷 = 4 篇阅读 + 完形 + 新题型 + 翻译，" +
+                "抵 ${PaperSession.PARTS_COUNT} 个卷面部分。记一笔就往后空出 " +
+                "${PaperSession.DIGESTION_DAYS} 天，这几天不排任务也不算欠账。",
+            style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
+        )
+
+        Spacer(Modifier.height(RitualSpace.listGap))
+
+        OutlineButton(
+            text = "＋ 我写了整套卷",
+            onClick = { showRegisterDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (state.paperSessions.isNotEmpty()) {
+            Spacer(Modifier.height(RitualSpace.listGap))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(RitualRadius.button))
-                    .background(RitualColors.accentGold.copy(alpha = 0.10f))
-                    .padding(12.dp),
-            ) {
-                Text(
-                    text = digestionNote,
-                    style = RitualTypography.bodyMedium,
-                    color = RitualColors.accentGold,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                "整套卷",
-                style = RitualTypography.labelSmall,
+                    .height(0.5.dp)
+                    .background(RitualColors.divider),
             )
-            Spacer(Modifier.weight(1f))
-            Text(
-                "登记整套卷",
-                style = RitualTypography.bodySmall.copy(
-                    color = RitualColors.accentInk,
-                    fontWeight = FontWeight.Medium,
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(RitualRadius.button))
-                    .clickable { showRegisterDialog = true }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-            )
-        }
-
-        if (state.paperSessions.isNotEmpty()) {
-            Spacer(Modifier.height(4.dp))
             state.paperSessions.forEach { session ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(top = RitualSpace.listGap),
                 ) {
                     Text(
                         text = "${session.name} · " +
-                            "${session.completedDate.monthValue}月${session.completedDate.dayOfMonth}日",
-                        style = RitualTypography.bodySmall,
-                        color = RitualColors.onBgMuted,
+                            "${session.completedDate.monthValue} 月 ${session.completedDate.dayOfMonth} 日写的",
+                        style = RitualTypography.bodySmall.copy(color = RitualColors.onBg),
                         modifier = Modifier.weight(1f),
                     )
                     Text(
@@ -520,7 +542,7 @@ private fun PaperSessionSection(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .clickable { onUndo(session.id) }
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
             }
@@ -529,9 +551,10 @@ private fun PaperSessionSection(
 
     if (showRegisterDialog) {
         RegisterPaperDialog(
+            today = state.today,
             defaultName = "${state.today.year} 年卷",
-            onConfirm = { name ->
-                onRegister(name)
+            onConfirm = { name, date ->
+                onRegister(name, date)
                 showRegisterDialog = false
             },
             onDismiss = { showRegisterDialog = false },
@@ -541,37 +564,60 @@ private fun PaperSessionSection(
 
 @Composable
 private fun RegisterPaperDialog(
+    today: LocalDate,
     defaultName: String,
-    onConfirm: (String) -> Unit,
+    onConfirm: (String, LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(defaultName) }
+    // 卷子常常是晚上写完、第二天才想起来记，所以完成日必须能往回选。
+    // 上一版写死成"今天"，昨天写的卷子怎么记都对不上，空档也就从错的那天开始。
+    var date by remember { mutableStateOf(today) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
     AlertDialog(
         containerColor = RitualColors.surface,
         titleContentColor = RitualColors.onBg,
         textContentColor = RitualColors.onBgMuted,
         onDismissRequest = onDismiss,
-        title = { Text("登记整套卷", style = RitualTypography.titleMedium) },
+        title = { Text("记一套卷", style = RitualTypography.titleMedium) },
         text = {
             Column {
                 Text(
-                    "一套卷 = 4 篇阅读 + 完形 + 新题型 + 翻译，共 7 个卷面部分。\n" +
-                        "登记后进入 4 个完整消化日，消化期内不排新计划、不算欠账。",
-                    style = RitualTypography.bodyMedium,
+                    "哪天写完的？空档从这天开始往后算 ${PaperSession.DIGESTION_DAYS} 天。",
+                    style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
                 )
                 Spacer(Modifier.height(RitualSpace.listGap))
+
+                // 常见就三种情况，先给按钮；更早的再翻日历
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    QuickDateChip("今天", date == today) { date = today }
+                    QuickDateChip("昨天", date == today.minusDays(1)) { date = today.minusDays(1) }
+                    QuickDateChip("前天", date == today.minusDays(2)) { date = today.minusDays(2) }
+                }
+
+                Spacer(Modifier.height(RitualSpace.listGap))
+                DateFieldRow(
+                    label = "完成日",
+                    date = date,
+                    onClick = { showDatePicker = true },
+                )
+
+                Spacer(Modifier.height(RitualSpace.listGap))
+                Text("卷名", style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted))
+                Spacer(Modifier.height(4.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("卷名") },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name.ifBlank { defaultName }) }) {
+            TextButton(onClick = { onConfirm(name.ifBlank { defaultName }, date) }) {
                 Text(
-                    "登记",
+                    "记上",
                     style = RitualTypography.bodyMedium.copy(
                         color = RitualColors.accentInk,
                         fontWeight = FontWeight.Medium,
@@ -588,6 +634,41 @@ private fun RegisterPaperDialog(
             }
         },
     )
+
+    if (showDatePicker) {
+        RitualDatePickerDialog(
+            initialDate = date,
+            title = "哪天写完的",
+            onConfirm = {
+                date = it
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
+        )
+    }
+}
+
+@Composable
+private fun QuickDateChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(RitualRadius.button))
+            .background(if (selected) RitualColors.accentInk else RitualColors.surfaceLow)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Text(
+            label,
+            style = RitualTypography.bodySmall.copy(
+                color = if (selected) RitualColors.onAccent else RitualColors.onBg,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            ),
+        )
+    }
 }
 
 private data class UndoDialogState(

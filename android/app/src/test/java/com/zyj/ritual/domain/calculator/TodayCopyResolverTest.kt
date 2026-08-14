@@ -146,7 +146,7 @@ class TodayCopyResolverTest {
     }
 
     @Test
-    fun `消化日标题与提示认账 不催进度`() {
+    fun `写卷当天 标题按赚到讲 并说清今天免做`() {
         val paper = PaperSession(
             name = "2016 年卷",
             completedDate = startDate,
@@ -155,9 +155,42 @@ class TodayCopyResolverTest {
         val records = imported()
         val progress = ProgressCalculator.calculate(plan, records)
         val credit = CreditCalculator.calculate(plan, cal, records, startDate)
-        val result = TodayCopyResolver.resolve(plan, cal, records, progress, credit, startDate, paper)
+        val result = TodayCopyResolver.resolve(
+            plan, cal, records, progress, credit, startDate, paper,
+            resumeDate = startDate.plusDays(5),
+        )
 
-        assertEquals("消化日 · 2016 年卷", result.headline)
-        assertTrue(result.digestionNote!!.contains("剩余阅读任务豁免"))
+        assertEquals("整套卷换来的空档", result.headline)
+        val note = result.digestionNote!!
+        assertTrue(note, note.contains("今天剩下的阅读任务免做"))
+        assertTrue(note, note.contains("不算欠账"))
+    }
+
+    /**
+     * 空档里最要紧的一句话是「那第 N 篇到底哪天做」。
+     * 只说"休整不计欠账"等于没回答——用户不知道哪天该重新开工，
+     * 只能天天打开来猜，而屏幕上看着一切正常。
+     */
+    @Test
+    fun `空档日必须说出第几篇哪天接着做`() {
+        val paper = PaperSession(
+            name = "2016 年卷",
+            completedDate = startDate,
+            createdAt = Instant.parse("2026-08-05T10:00:00Z"),
+        )
+        val records = imported()
+        val progress = ProgressCalculator.calculate(plan, records)
+        val credit = CreditCalculator.calculate(plan, cal, records, startDate)
+        val day2 = startDate.plusDays(2)
+        val resume = startDate.plusDays(5)
+
+        val result = TodayCopyResolver.resolve(
+            plan, cal, records, progress, credit, day2, paper, resumeDate = resume,
+        )
+
+        val note = result.digestionNote!!
+        assertTrue(note, note.contains("第 ${progress.currentArticle} 篇"))
+        assertTrue(note, note.contains("${resume.monthValue}月${resume.dayOfMonth}日"))
+        assertTrue(note, note.contains("挣来的第 2 天"))
     }
 }
