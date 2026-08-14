@@ -2,6 +2,7 @@ package com.zyj.ritual.ui.screens.vocab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -132,6 +133,19 @@ fun VocabSetupScreenContent(
     var picker by remember { mutableStateOf<PickerTarget?>(null) }
     var showConfirm by remember { mutableStateOf(false) }
 
+    // 「那天开始时已经背了多少」不该让用户去回忆——App 手上的素材足够反推：
+    // 用本看板之前的存量（initialDone）+ 那天之前记下的新词。
+    // 唯一推不出来的只有 initialDone 本身，那是首次设置时人填的一个历史常数。
+    val derivedStartDone = remember(planStartDate, records, currentConfig.initialDone) {
+        currentConfig.initialDone +
+            VocabSetupCalculator.newWordsBefore(records, planStartDate.toString())
+    }
+    val newWordsBeforeStart = remember(planStartDate, records) {
+        VocabSetupCalculator.newWordsBefore(records, planStartDate.toString())
+    }
+    val derivedHint = "App 自己算的：用它之前的 ${currentConfig.initialDone} 个 + " +
+        "这天之前记下的 $newWordsBeforeStart 个新词。跟你印象里对不上就直接改。"
+
     val error = VocabSetupCalculator.validate(
         records = records,
         totalWords = totalWords,
@@ -169,8 +183,8 @@ fun VocabSetupScreenContent(
 
         Text("背单词设置", style = RitualTypography.headlineLarge)
         Text(
-            "只填你本来就知道的三个数：哪天开始按新节奏背、那天已经背了多少、从那天起每天多少。" +
-                "剩下的换算 App 自己做。",
+            "选个起算日和每天背多少就行。那天已经背了多少，App 会照记录自己算出来，" +
+                "你只在觉得不对的时候才需要改它。",
             style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
             modifier = Modifier.padding(top = 8.dp),
         )
@@ -187,14 +201,27 @@ fun VocabSetupScreenContent(
         Spacer(Modifier.height(RitualSpace.listGap))
 
         NumberStepperField(
-            label = "那天为止总共背了",
+            label = "那天开始时已经背了",
             value = planStartDone,
             onValueChange = { planStartDone = it },
             step = 10,
             max = 99_999,
             unit = "个",
-            hint = "照那个背单词 APP 首页的累计数填就行。",
+            hint = derivedHint,
         )
+
+        // 手动改过、跟按记录算出来的对不上时，给一条退路。
+        // 不自动改回去——那是他自己填的，App 无权覆盖；但也不能不吭声，
+        // 否则一个错的起点会安安静静地把整条计划线带偏。
+        if (planStartDone != derivedStartDone) {
+            Text(
+                "按记录算应该是 $derivedStartDone 个 · 点这里改回去",
+                style = RitualTypography.bodySmall.copy(color = RitualColors.accentInk),
+                modifier = Modifier
+                    .padding(top = 6.dp, start = 4.dp)
+                    .clickable { planStartDone = derivedStartDone },
+            )
+        }
 
         Spacer(Modifier.height(RitualSpace.listGap))
 
@@ -275,7 +302,15 @@ fun VocabSetupScreenContent(
         PickerTarget.PLAN_START -> RitualDatePickerDialog(
             initialDate = planStartDate,
             title = "从哪天起按新节奏算",
-            onConfirm = { planStartDate = it; picker = null },
+            onConfirm = { picked ->
+                planStartDate = picked
+                // 换了起算日，「那天已背多少」当然是另一个数了。
+                // 不跟着重算的话，屏幕上会留着上一个日期的旧数字——
+                // 看着像模像样，算出来的完成日却是错的。
+                planStartDone = currentConfig.initialDone +
+                    VocabSetupCalculator.newWordsBefore(records, picked.toString())
+                picker = null
+            },
             onDismiss = { picker = null },
         )
         PickerTarget.EXAM -> RitualDatePickerDialog(

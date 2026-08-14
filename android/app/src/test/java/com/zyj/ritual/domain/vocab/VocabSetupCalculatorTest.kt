@@ -227,6 +227,54 @@ class VocabSetupCalculatorTest {
         )
     }
 
+    /**
+     * 用户 2026-08-14 的原话：「我不知道 8 月 2 日之前背了多少，你有当时设置的数据，
+     * 和到现在为止的备份数据，难道不能反推吗？」
+     *
+     * 能。这里用他 8/6 那份真实备份的数字钉死这条反推：
+     * initialDone 380（首次设置时人填的历史常数，唯一推不出来的一项）
+     * + 8/2 之前记下的新词（7/27 的 20 + 7/28 的 20）= 420。
+     * 中间那一堆 backlog 全是复习，一个都不能算进来。
+     */
+    @Test
+    fun `按真实备份反推出 8月2日的起点是 420`() {
+        val realRecords = listOf(
+            rec("2026-07-27", 20),
+            rec("2026-07-27", 40, kind = "backlog"),
+            rec("2026-07-27", 40, kind = "backlog"),
+            rec("2026-07-28", 20),
+            rec("2026-07-29", 4, kind = "backlog"),
+            rec("2026-07-30", 116, kind = "backlog"),
+            rec("2026-07-31", 20, kind = "backlog"),
+            rec("2026-08-01", 24, kind = "backlog"),
+            rec("2026-08-02", 20),
+            rec("2026-08-02", 20),
+        )
+        val realConfig = VocabConfig(totalWords = 2416, initialDone = 380, dailyWords = 20)
+
+        val anchor = VocabSetupCalculator.anchorFrom(
+            realConfig.copy(
+                planStartDone = null,
+                rateChanges = listOf(RateChange("2026-08-02", 40)),
+            ),
+            realRecords,
+            "2026-08-14",
+        )
+
+        assertEquals("2026-08-02", anchor.planStartDate)
+        assertEquals("反推出来的起点不是 420", 420, anchor.planStartDone)
+    }
+
+    @Test
+    fun `换个起算日 反推出来的起点跟着变`() {
+        val before0802 = 380 + VocabSetupCalculator.newWordsBefore(records, "2026-08-02")
+        val before0805 = 380 + VocabSetupCalculator.newWordsBefore(records, "2026-08-05")
+
+        assertEquals(420, before0802)   // 380 + 7 月底的 40
+        assertEquals(500, before0805)   // 再加 8/2、8/3 的各 40
+        assertTrue("起算日往后挪，起点却没跟着涨", before0805 > before0802)
+    }
+
     @Test
     fun `起算日之前的新词累计不含复习`() {
         // 8/5 之前：7/30 的 20 + 7/31 的 20 + 8/2 的 40 + 8/3 的 40 = 120，
