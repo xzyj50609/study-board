@@ -2,16 +2,16 @@ package com.zyj.ritual.ui.screens.vocab
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -102,18 +102,6 @@ fun VocabCalendarScreen(
     }
 }
 
-/**
- * 顶部面板的两种排法。用户反馈「背词设置占了特别大一行，日历空间太小」，
- * 两种解法都做出来渲染成图对比，选定后删掉没选的那个。
- */
-enum class VocabBoardLayout {
-    /** A：顶部面板也进日历的滚动容器，往下滑面板滚走，日历占满整屏 */
-    ScrollAll,
-
-    /** B：面板仍固定在顶部，只把重复的内外双层内边距和多余空行压掉 */
-    CompactFixed,
-}
-
 @Composable
 fun VocabCalendarScreenContent(
     aggregate: VocabAggregateState,
@@ -121,60 +109,36 @@ fun VocabCalendarScreenContent(
     onAddReview: (Int) -> Unit = {},
     onSaveReviewDue: (Int) -> Unit = {},
     onOpenSettings: () -> Unit = {},
-    layout: VocabBoardLayout = VocabBoardLayout.ScrollAll,
 ) {
     val state = aggregate.state
     val calendar = aggregate.calendar
 
     var showCalibrate by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = RitualColors.bg
-    ) { innerPadding ->
-        when (layout) {
-            VocabBoardLayout.ScrollAll -> LazyVerticalGrid(
-                columns = GridCells.Fixed(7),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    VocabBoardPanels(
-                        aggregate = aggregate,
-                        onAddWords = onAddWords,
-                        onAddReview = onAddReview,
-                        onOpenSettings = onOpenSettings,
-                        onOpenCalibrate = { showCalibrate = true },
-                        // 面板已经在 grid 的左右 16dp 内边距里了，别再套一层
-                        horizontalPadding = 0.dp,
-                    )
-                }
-                calendarGrid(calendar)
-            }
-
-            VocabBoardLayout.CompactFixed -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
+    // ⚠️ 这里**不要**再套一层 Scaffold。
+    // MainActivity 已经有一个 Scaffold 了，它已经把状态栏的高度让出来了；
+    // 这一页原来又套了一个，于是状态栏高度被让了两遍——屏幕顶端到「背词设置」
+    // 之间白出来一大片。用户 2026-08-17 反馈的「上面空太多」就是这个，
+    // 不是内边距调大了，是同一份系统边距算了两次。
+    // 别的页面（今日/月历/进度/设置）都没套第二层，所以只有这页显得往下掉。
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 VocabBoardPanels(
                     aggregate = aggregate,
                     onAddWords = onAddWords,
                     onAddReview = onAddReview,
                     onOpenSettings = onOpenSettings,
                     onOpenCalibrate = { showCalibrate = true },
-                    horizontalPadding = 16.dp,
+                    // 面板已经在 grid 的左右 16dp 内边距里了，别再套一层
+                    horizontalPadding = 0.dp,
                 )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(7),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    calendarGrid(calendar)
-                }
             }
+            calendarGrid(calendar)
         }
     }
 
@@ -193,11 +157,10 @@ fun VocabCalendarScreenContent(
 /**
  * 顶部那几块（设置入口 / 进度卡 / 复习区 / 打卡按钮 / 图例）。
  *
- * 抽出来是因为 A、B 两版布局要放同一份内容，只是放的容器不同——
- * A 版塞进 LazyVerticalGrid 当整行 item，B 版留在 Column 里固定。
- * 抄两份的话，以后改一处忘了另一处，两版就会悄悄长得不一样。
+ * 整块作为 LazyVerticalGrid 的一个整行 item，跟日历一起滚——
+ * 顶上固定一大块面板会把日历挤成一条缝。
  *
- * `horizontalPadding`：A 版外层 grid 已经有 16dp 内边距了，再套一层就会缩进两次。
+ * `horizontalPadding`：外层 grid 已经有 16dp 内边距了，这里再套一层就会缩进两次。
  */
 @Composable
 private fun VocabBoardPanels(
@@ -297,12 +260,14 @@ private fun LazyGridScope.calendarGrid(calendar: VocabCalendarResult) {
 /**
  * 就地打卡两个按钮。
  *
- * 预填量跟着状态走，不再硬编码 20：今天要复习 45 个却只能一次点 +20，
- * 「今天定了多少、我完成了」这条路径就走不完。
+ * **实际背了多少就记多少，不许凑整。** 这是 2026-08-17 用户反馈的核心：
+ * 按钮固定记 40（＝今天的计划额度），可他有时只多学一组 20、有时 28、有时 8 个。
+ * 只能记 40 的话，那 8 个要么不记、要么记成 40——前者丢数据，后者数据是假的。
+ * 所以加减号一步走 1，快捷档也不是「20 的倍数」那套，随便什么数都填得出来。
  *
- * 短按记预填量（每天的主路径），长按弹面板改数量——用户在「不背单词」里
- * 多学一次是一组 20 个，而这里的预填量是计划额度 40，不给改就只能记多一倍。
- * 长按这件事屏幕上看不见，所以下面那行提示小字是功能的一部分，不是装饰。
+ * 「改」按钮必须**看得见**。上一版做成长按，屏幕上没有任何痕迹，
+ * 用户装上之后根本没发现这个功能存在。这里沿用复习那行已经验证过的「改」小方框——
+ * 同一个 App 里同一件事就该长一个样。
  */
 @Composable
 private fun VocabAddRow(
@@ -321,20 +286,20 @@ private fun VocabAddRow(
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             AddButton(
                 text = "+$newAmount 新词",
                 color = RitualColors.accentInk,
                 onClick = { onAddWords(newAmount) },
-                onLongClick = { sheet = AddSheetTarget.New },
+                onPickAmount = { sheet = AddSheetTarget.New },
                 modifier = Modifier.weight(1f),
             )
             AddButton(
                 text = "+$reviewAmount 复习",
                 color = RitualColors.accentReview,
                 onClick = { onAddReview(reviewAmount) },
-                onLongClick = { sheet = AddSheetTarget.Review },
+                onPickAmount = { sheet = AddSheetTarget.Review },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -342,7 +307,7 @@ private fun VocabAddRow(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "长按可以改这次记多少个",
+            text = "今天已背 ${state.todayWords} / ${state.todayQuota} · 背了几个就记几个，点 ▾ 改",
             fontSize = 11.sp,
             color = RitualColors.onBgFaint,
             textAlign = TextAlign.Center,
@@ -352,11 +317,12 @@ private fun VocabAddRow(
 
     when (sheet) {
         AddSheetTarget.New -> AddAmountSheet(
-            title = "记新词",
+            title = "这次背了几个新词",
             initialAmount = newAmount,
             // 上限＝还没背的词数。背完了还能继续加，只能是填错了
             max = state.remainWords.coerceAtLeast(1),
-            presets = VOCAB_ADD_PRESETS,
+            todayDone = state.todayWords,
+            todayTarget = state.todayQuota,
             onDismiss = { sheet = null },
             onConfirm = { amount ->
                 onAddWords(amount)
@@ -364,12 +330,13 @@ private fun VocabAddRow(
             },
         )
         AddSheetTarget.Review -> AddAmountSheet(
-            title = "记复习",
+            title = "这次复习了几个",
             initialAmount = reviewAmount,
             // 复习没有「总量」这个概念（见 VocabReviewSection 顶部第 1 条红线），
             // 所以不拿 remainWords 当上限，只给一个防手滑的宽松上界
             max = REVIEW_ADD_MAX,
-            presets = VOCAB_ADD_PRESETS,
+            todayDone = state.todayReview,
+            todayTarget = state.reviewDueToday,
             onDismiss = { sheet = null },
             onConfirm = { amount ->
                 onAddReview(amount)
@@ -380,38 +347,69 @@ private fun VocabAddRow(
     }
 }
 
-/** 长按打卡按钮时，弹的是哪一个面板 */
+/** 点「改」时，弹的是哪一个面板 */
 private enum class AddSheetTarget { New, Review }
-
-/** 快捷档：20 是「不背单词」一组的量，40 是用户当前计划额度 */
-private val VOCAB_ADD_PRESETS = listOf(10, 20, 40)
 
 /** 复习量没有天然上限，这个数只用来挡住手滑多打一位 */
 private const val REVIEW_ADD_MAX = 9_999
 
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * 打卡按钮：主体记预填量，右端一个 `▾` 点开改数量。
+ *
+ * 为什么是 `▾` 而不是「改」小方框：方框是第四个元素，硬塞进这一行会把
+ * 两个按钮挤扁，用户原话「太丑了，不符合这个 UI 设计」。而 `▾` 是这个 App
+ * 已有的记号——日期选择器（RitualDatePicker）用的就是它，含义是「点这里挑一个值」，
+ * 正好是这里要表达的意思。它长在按钮内部，不占额外位置。
+ *
+ * 为什么不干脆退回长按：长按在屏幕上没有任何痕迹，上一版做成长按之后
+ * 用户装上根本没发现有这功能。`▾` 看得见，长按看不见，差别就在这。
+ */
 @Composable
 private fun AddButton(
     text: String,
     color: Color,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onPickAmount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
         modifier = modifier
             .height(44.dp)
             .clip(RoundedCornerShape(RitualRadius.button))
-            .background(color.copy(alpha = 0.15f))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        contentAlignment = Alignment.Center,
+            .background(color.copy(alpha = 0.15f)),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = text,
-            style = RitualTypography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = color,
-        )
+        // 主体：点了就按预填量记一笔，这是每天的主路径，占满剩余宽度
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = text,
+                style = RitualTypography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = color,
+            )
+        }
+
+        // 右端 ▾：点开面板改数量。给足点击区域，别做成只有箭头那几像素能点
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .clickable(onClick = onPickAmount)
+                .padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "▾",
+                style = RitualTypography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = color,
+            )
+        }
     }
 }
 

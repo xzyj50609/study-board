@@ -2,15 +2,15 @@ package com.zyj.ritual.ui.screens.today
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -190,8 +190,9 @@ fun VocabTodayCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 就地打卡按钮行。短按记预填量，长按改数量——预填量是计划额度（40），
-            // 但用户在「不背单词」里多学一次是一组 20 个，不给改就只能记多一倍。
+            // 打卡按钮：主体记今天的额度，右端 ▾ 点开改数量。
+            // 实际背了 28 个、8 个都得记得下来，所以改数量的入口必须看得见——
+            // 上一版藏在长按里，用户装上之后根本没发现有这功能。
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -200,7 +201,7 @@ fun VocabTodayCard(
                     text = "+$newAmount 新词",
                     color = RitualColors.accentInk,
                     onClick = { onAddWords(newAmount) },
-                    onLongClick = { sheet = TodayAddTarget.New },
+                    onPickAmount = { sheet = TodayAddTarget.New },
                     modifier = Modifier.weight(1f),
                 )
 
@@ -208,16 +209,15 @@ fun VocabTodayCard(
                     text = "+$reviewAmount 复习",
                     color = RitualColors.accentReview,
                     onClick = { onAddReview(reviewAmount) },
-                    onLongClick = { sheet = TodayAddTarget.Review },
+                    onPickAmount = { sheet = TodayAddTarget.Review },
                     modifier = Modifier.weight(1f),
                 )
             }
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // 长按在屏幕上看不见，这行小字就是这个功能的入口。删了它等于删了功能。
             Text(
-                text = "长按可以改这次记多少个",
+                text = "背了几个就记几个，点 ▾ 改",
                 fontSize = 11.sp,
                 color = RitualColors.onBgFaint,
                 textAlign = TextAlign.Center,
@@ -228,10 +228,11 @@ fun VocabTodayCard(
 
     when (sheet) {
         TodayAddTarget.New -> AddAmountSheet(
-            title = "记新词",
+            title = "这次背了几个新词",
             initialAmount = newAmount,
             max = state.remainWords.coerceAtLeast(1),
-            presets = TODAY_ADD_PRESETS,
+            todayDone = state.todayWords,
+            todayTarget = state.todayQuota,
             onDismiss = { sheet = null },
             onConfirm = { amount ->
                 onAddWords(amount)
@@ -239,10 +240,11 @@ fun VocabTodayCard(
             },
         )
         TodayAddTarget.Review -> AddAmountSheet(
-            title = "记复习",
+            title = "这次复习了几个",
             initialAmount = reviewAmount,
             max = TODAY_REVIEW_ADD_MAX,
-            presets = TODAY_ADD_PRESETS,
+            todayDone = state.todayReview,
+            todayTarget = state.reviewDueToday,
             onDismiss = { sheet = null },
             onConfirm = { amount ->
                 onAddReview(amount)
@@ -253,38 +255,62 @@ fun VocabTodayCard(
     }
 }
 
-/** 长按今日卡打卡按钮时，弹的是哪一个面板 */
+/** 点今日卡的「改」时，弹的是哪一个面板 */
 private enum class TodayAddTarget { New, Review }
-
-/** 快捷档：20 是「不背单词」一组的量，40 是用户当前计划额度 */
-private val TODAY_ADD_PRESETS = listOf(10, 20, 40)
 
 /** 复习没有天然总量，这个数只用来挡住手滑多打一位 */
 private const val TODAY_REVIEW_ADD_MAX = 9_999
 
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * 打卡按钮：主体记预填量，右端 `▾` 点开改数量。
+ * `▾` 是这个 App 已有的「点这里挑一个值」记号（见 RitualDatePicker），
+ * 长在按钮内部不占额外位置——之前在旁边加「改」小方框，四个元素挤一行，太丑。
+ */
 @Composable
 private fun TodayAddButton(
     text: String,
     color: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onPickAmount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
         modifier = modifier
             .height(44.dp)
             .clip(RoundedCornerShape(RitualRadius.button))
-            .background(color.copy(alpha = 0.15f))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        contentAlignment = Alignment.Center
+            .background(color.copy(alpha = 0.15f)),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = text,
-            style = RitualTypography.bodyMedium.copy(
-                color = color,
-                fontWeight = FontWeight.Medium
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = text,
+                style = RitualTypography.bodyMedium.copy(
+                    color = color,
+                    fontWeight = FontWeight.Medium
+                )
             )
-        )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .clickable(onClick = onPickAmount)
+                .padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "▾",
+                style = RitualTypography.bodyMedium.copy(
+                    color = color,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+        }
     }
 }

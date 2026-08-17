@@ -22,21 +22,28 @@ import com.zyj.ritual.ui.theme.RitualSpace
 import com.zyj.ritual.ui.theme.RitualTypography
 
 /**
- * 「这次记多少个」面板。长按打卡按钮弹出来。
+ * 「这次背了几个」面板。点打卡按钮旁边的「改」弹出来。
  *
- * 为什么需要它：打卡按钮的数量一直等于今天的计划额度（用户是 40），
- * 但用户在「不背单词」里多学一次是一组 20 个。想记 20 的时候点一下就变成 40，
- * 等于记了 20 个根本没背的词——数据从此和现实对不上，而且屏幕上完全看不出来。
+ * ## 为什么要有它
  *
- * 为什么是长按不是常驻控件：短按「+40」是每天的主路径，一天点一次，
- * 不能为了偶尔改个数就把它拆成「先调数再确认」两步。长按是加法不是改法。
- * 代价是长按这件事屏幕上看不见，所以调用方**必须**在按钮附近写明可以长按
- * （见 VocabTodayCard / VocabCalendarScreen 里那行提示小字），否则这个功能等于不存在。
+ * 打卡按钮记的量固定等于今天的计划额度（比如 40）。可实际背词不是按额度发生的：
+ * 有时多学一组 20，有时 28 个，有时只多背了 8 个。只能记 40 的话，
+ * 那 8 个要么不记（数据丢了），要么记成 40（数据是假的）——两条都不行。
  *
- * 上限不是随便定的：`max` 传的是「还没背的词数」。填一个比这还大的数，
- * 意味着背完了还在背，只能是填错了。这时候拦住并把原因写在屏幕上，
- * 不静默截断成上限值——静默截断的话用户以为记了 99999，实际记了 1503，
- * 两个数都不是他想要的，而他不会知道。
+ * ## 为什么加减号一步只走 1
+ *
+ * 上一版一步走 5、快捷档给的是 10/20/40，等于默认「你背的一定是 5 的倍数」。
+ * 用户明确否掉了这个假设：背了 28 个就是 28 个，不该被凑成 30。
+ * 一步走 1 慢，但配上下面那排快捷档（跟着今天的实际情况算，不是写死的整数），
+ * 常用的数一下就点到，冷门的数也填得出来。
+ *
+ * ## 快捷档为什么不写死
+ *
+ * 写死 10/20/40 只在「今天目标 40」时说得通，目标改成 60 就全不对了。
+ * 这里的档位从「今天还差多少」和「今天目标」算出来，跟着设置走。
+ *
+ * @param todayDone 今天已经记了多少（用来算「还差多少」这个档位）
+ * @param todayTarget 今天的目标；复习那边可能没校准，所以允许为空
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,18 +51,30 @@ fun AddAmountSheet(
     title: String,
     initialAmount: Int,
     max: Int,
-    presets: List<Int>,
+    todayDone: Int,
+    todayTarget: Int?,
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
-    var amount by remember { mutableStateOf(initialAmount.coerceIn(1, maxOf(max, 1))) }
+    val upperBound = maxOf(max, 1)
+    var amount by remember { mutableStateOf(initialAmount.coerceIn(1, upperBound)) }
 
     val error: String? = when {
         amount < 1 -> "至少要记 1 个"
         amount > max -> "最多还能记 $max 个，这本词书就背完了"
         else -> null
     }
+
+    // 档位跟着今天的实际情况走，不写死。
+    // 「还差 N」是最常用的一档——背完今天的量就点它，不用心算。
+    val remainToday = todayTarget?.let { it - todayDone }?.takeIf { it in 1..upperBound }
+    val presets = buildList {
+        remainToday?.let { add(it) }
+        listOf(10, 20, todayTarget ?: 40).forEach { candidate ->
+            if (candidate in 1..upperBound && candidate !in this) add(candidate)
+        }
+    }.sorted().take(4)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -73,25 +92,39 @@ fun AddAmountSheet(
                 ),
         ) {
             Text(title, style = RitualTypography.headlineSmall)
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = if (todayTarget != null) {
+                    "今天已记 $todayDone / $todayTarget · 背了几个就填几个，不用凑整"
+                } else {
+                    "今天已记 $todayDone · 背了几个就填几个，不用凑整"
+                },
+                style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
+            )
+
             Spacer(Modifier.height(RitualSpace.listGap))
 
             NumberStepperField(
                 label = "这次记多少个",
                 value = amount,
                 onValueChange = { amount = it },
-                step = 5,
+                // 一步走 1：背了 28 个就该点得出 28，不许被凑成 30
+                step = 1,
                 min = 1,
-                max = maxOf(max, 1),
+                max = upperBound,
                 unit = "个",
             )
 
-            Spacer(Modifier.height(RitualSpace.listGap))
-
-            PresetChipsRow(
-                presets = presets,
-                selected = amount,
-                onSelect = { amount = it },
-            )
+            if (presets.isNotEmpty()) {
+                Spacer(Modifier.height(RitualSpace.listGap))
+                PresetChipsRow(
+                    presets = presets,
+                    selected = amount,
+                    onSelect = { amount = it },
+                )
+            }
 
             if (error != null) {
                 Spacer(Modifier.height(RitualSpace.listGap))
