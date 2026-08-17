@@ -7,6 +7,7 @@ import com.zyj.ritual.data.repository.VocabAggregateState
 import com.zyj.ritual.domain.vocab.VocabCalculator
 import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.domain.vocab.VocabRecord
+import com.zyj.ritual.ui.screens.vocab.VocabBoardLayout
 import com.zyj.ritual.ui.screens.vocab.VocabCalendarScreenContent
 import com.zyj.ritual.ui.screens.vocab.VocabSetupScreenContent
 import com.zyj.ritual.ui.theme.RitualTheme
@@ -188,6 +189,40 @@ class VocabScreenshots {
         )
         RitualTheme {
             VocabCalendarScreenContent(aggregate = buildVocabAggregate(records))
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  布局 A / B 对比（2026-08-17 新增）
+    //
+    //  用户反馈「背词设置占了特别大一行、上面空了很多行，下面日历空间太小」。
+    //  两种解法都渲染出来给用户挑，选定后删掉没选的那张和对应的枚举分支。
+    //  两张图必须用同一份数据、同一个尺寸，否则比的就不是布局而是数据。
+    // ════════════════════════════════════════════════════════════════
+
+    /** A 版：顶部面板跟着一起滚，往下滑日历能占满整屏 */
+    @PreviewTest
+    @Preview(name = "背词看板-A整页滚动", widthDp = 390, heightDp = 844, showBackground = true)
+    @Composable
+    fun vocabBoardLayoutA() {
+        RitualTheme {
+            VocabCalendarScreenContent(
+                aggregate = buildVocabAggregate(SETUP_RECORDS, SETUP_CONFIG),
+                layout = VocabBoardLayout.ScrollAll,
+            )
+        }
+    }
+
+    /** B 版：面板仍固定，只把双层内边距和多余空行压掉 */
+    @PreviewTest
+    @Preview(name = "背词看板-B压缩固定", widthDp = 390, heightDp = 844, showBackground = true)
+    @Composable
+    fun vocabBoardLayoutB() {
+        RitualTheme {
+            VocabCalendarScreenContent(
+                aggregate = buildVocabAggregate(SETUP_RECORDS, SETUP_CONFIG),
+                layout = VocabBoardLayout.CompactFixed,
+            )
         }
     }
 

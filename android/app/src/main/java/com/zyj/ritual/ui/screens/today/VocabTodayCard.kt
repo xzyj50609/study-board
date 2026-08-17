@@ -2,8 +2,10 @@ package com.zyj.ritual.ui.screens.today
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zyj.ritual.data.repository.VocabAggregateState
 import com.zyj.ritual.domain.vocab.VocabCalculator
+import com.zyj.ritual.ui.components.AddAmountSheet
 import com.zyj.ritual.ui.components.ProgressBarLine
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualRadius
@@ -80,6 +84,8 @@ fun VocabTodayCard(
     val newAmount = state.todayQuota.coerceAtLeast(1)
     val reviewAmount = (state.reviewLeftToday?.takeIf { it > 0 } ?: state.todayQuota)
         .coerceAtLeast(1)
+
+    var sheet by remember { mutableStateOf<TodayAddTarget?>(null) }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = RitualColors.surface),
@@ -184,47 +190,101 @@ fun VocabTodayCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 就地打卡按钮行 (+20 新词 / +20 复习)
+            // 就地打卡按钮行。短按记预填量，长按改数量——预填量是计划额度（40），
+            // 但用户在「不背单词」里多学一次是一组 20 个，不给改就只能记多一倍。
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp)
-                        .clip(RoundedCornerShape(RitualRadius.button))
-                        .background(RitualColors.accentInk.copy(alpha = 0.15f))
-                        .clickable { onAddWords(newAmount) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "+$newAmount 新词",
-                        style = RitualTypography.bodyMedium.copy(
-                            color = RitualColors.accentInk,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
+                TodayAddButton(
+                    text = "+$newAmount 新词",
+                    color = RitualColors.accentInk,
+                    onClick = { onAddWords(newAmount) },
+                    onLongClick = { sheet = TodayAddTarget.New },
+                    modifier = Modifier.weight(1f),
+                )
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp)
-                        .clip(RoundedCornerShape(RitualRadius.button))
-                        .background(RitualColors.accentReview.copy(alpha = 0.15f))
-                        .clickable { onAddReview(reviewAmount) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "+$reviewAmount 复习",
-                        style = RitualTypography.bodyMedium.copy(
-                            color = RitualColors.accentReview,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
+                TodayAddButton(
+                    text = "+$reviewAmount 复习",
+                    color = RitualColors.accentReview,
+                    onClick = { onAddReview(reviewAmount) },
+                    onLongClick = { sheet = TodayAddTarget.Review },
+                    modifier = Modifier.weight(1f),
+                )
             }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // 长按在屏幕上看不见，这行小字就是这个功能的入口。删了它等于删了功能。
+            Text(
+                text = "长按可以改这次记多少个",
+                fontSize = 11.sp,
+                color = RitualColors.onBgFaint,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
+    }
+
+    when (sheet) {
+        TodayAddTarget.New -> AddAmountSheet(
+            title = "记新词",
+            initialAmount = newAmount,
+            max = state.remainWords.coerceAtLeast(1),
+            presets = TODAY_ADD_PRESETS,
+            onDismiss = { sheet = null },
+            onConfirm = { amount ->
+                onAddWords(amount)
+                sheet = null
+            },
+        )
+        TodayAddTarget.Review -> AddAmountSheet(
+            title = "记复习",
+            initialAmount = reviewAmount,
+            max = TODAY_REVIEW_ADD_MAX,
+            presets = TODAY_ADD_PRESETS,
+            onDismiss = { sheet = null },
+            onConfirm = { amount ->
+                onAddReview(amount)
+                sheet = null
+            },
+        )
+        null -> Unit
+    }
+}
+
+/** 长按今日卡打卡按钮时，弹的是哪一个面板 */
+private enum class TodayAddTarget { New, Review }
+
+/** 快捷档：20 是「不背单词」一组的量，40 是用户当前计划额度 */
+private val TODAY_ADD_PRESETS = listOf(10, 20, 40)
+
+/** 复习没有天然总量，这个数只用来挡住手滑多打一位 */
+private const val TODAY_REVIEW_ADD_MAX = 9_999
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun TodayAddButton(
+    text: String,
+    color: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(RoundedCornerShape(RitualRadius.button))
+            .background(color.copy(alpha = 0.15f))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = RitualTypography.bodyMedium.copy(
+                color = color,
+                fontWeight = FontWeight.Medium
+            )
+        )
     }
 }
