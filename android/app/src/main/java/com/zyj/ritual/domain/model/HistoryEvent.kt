@@ -26,4 +26,6 @@ enum class HistoryEventType {
     UNDO_ARTICLE,  // 撤销整篇
     RESCHEDULE,    // 重新排期
     IMPORT,        // 首次设置导入
+    PAPER_SESSION,       // 登记整套卷（进入消化期）
+    PAPER_SESSION_UNDO,  // 撤销整套卷登记
 }

@@ -1,5 +1,7 @@
 package com.zyj.ritual.ui.screens.vocab
 
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +32,7 @@ import com.zyj.ritual.domain.vocab.VocabState
 import com.zyj.ritual.ui.components.ProgressBarLine
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualTypography
+import kotlinx.coroutines.delay
 
 /**
  * 复习区：两行两条进度条。移植自网页版 v15 的 `.review-goal` + `.backlog-zone`。
@@ -63,6 +71,27 @@ fun VocabReviewSection(
 ) {
     val cleared = state.reviewToNext == 0 && state.reviewTotal > 0
 
+    val animatedReviewTotal by animateIntAsState(
+        targetValue = state.reviewTotal,
+        animationSpec = tween(durationMillis = 1400),
+        label = "reviewTotal",
+    )
+    val animatedTodayReview by animateIntAsState(
+        targetValue = state.todayReview,
+        animationSpec = tween(durationMillis = 1400),
+        label = "todayReview",
+    )
+    var lastReviewTotal by remember { mutableStateOf(state.reviewTotal) }
+    var reviewDelta by remember { mutableStateOf(0) }
+    LaunchedEffect(state.reviewTotal) {
+        if (state.reviewTotal > lastReviewTotal) {
+            reviewDelta = state.reviewTotal - lastReviewTotal
+            delay(1400)
+            reviewDelta = 0
+        }
+        lastReviewTotal = state.reviewTotal
+    }
+
     Column(modifier = modifier.fillMaxWidth()) {
 
         // ── 第一行：累计里程碑（只涨不跌，成就感来源）──
@@ -74,10 +103,12 @@ fun VocabReviewSection(
                 color = RitualColors.accentReview,
                 height = 11.dp,
                 modifier = Modifier.weight(1f),
+                durationMillis = 1400,
+                pulseOnFinish = true,
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "${state.reviewTotal}",
+                text = "$animatedReviewTotal",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = RitualColors.accentReview,
@@ -100,6 +131,15 @@ fun VocabReviewSection(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        if (reviewDelta > 0) {
+            Text(
+                text = "+$reviewDelta 复习",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = RitualColors.accentReview,
+            )
+        }
+
         Spacer(Modifier.height(10.dp))
 
         // ── 第二行：今天（可点，点开校准面板）──
@@ -119,7 +159,7 @@ fun VocabReviewSection(
             if (due == null) {
                 // 红线 4：没有分母就不画条子。占位交给 weight，「改」还是贴右
                 Text(
-                    text = "已复习 ${state.todayReview}",
+                    text = "已复习 $animatedTodayReview",
                     style = RitualTypography.bodyMedium,
                     color = RitualColors.onBgMuted,
                     modifier = Modifier.weight(1f),
@@ -130,10 +170,12 @@ fun VocabReviewSection(
                     color = RitualColors.accentReview,
                     height = 8.dp,
                     modifier = Modifier.weight(1f),
+                    durationMillis = 1400,
+                    pulseOnFinish = true,
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (todayDone) "${state.todayReview}/$due ✓" else "${state.todayReview}/$due",
+                    text = if (todayDone) "$animatedTodayReview/$due ✓" else "$animatedTodayReview/$due",
                     style = RitualTypography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = if (todayDone) RitualColors.accentReview else RitualColors.onBgMuted,

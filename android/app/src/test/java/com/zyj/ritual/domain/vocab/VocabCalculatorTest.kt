@@ -587,4 +587,50 @@ class VocabCalculatorTest {
         assertEquals("档长 100：526 → 第 6 档进了 26",
             listOf(6, 26), listOf(st(526, 100).reviewLevel, st(526, 100).reviewIntoLevel))
     }
+
+    // ---- 24. planStartDone：把历史进度与新计划解耦 ----
+    @Test
+    fun `24 planStartDone decouples history from new plan`() {
+        val cfg = VocabConfig(
+            totalWords = 2416,
+            initialDone = 380,
+            dailyWords = 20,
+            rateChanges = listOf(RateChange("2026-08-02", 40)),
+            planStartDone = 420,
+            examDate = "2026-12-19",
+        )
+        val records = listOf(
+            rec("2026-07-27", 20),
+            rec("2026-07-28", 20),
+            rec("2026-08-02", 40),
+            rec("2026-08-03", 40),
+            rec("2026-08-04", 40),
+            rec("2026-08-05", 40),
+            rec("2026-08-06", 50),
+            rec("2026-08-07", 40),
+            rec("2026-08-08", 40),
+            rec("2026-08-09", 40),
+            rec("2026-08-10", 40),
+            rec("2026-08-11", 40),
+            rec("2026-08-12", 40),
+            rec("2026-08-13", 40),
+        )
+        val st = VocabCalculator.computeState(records, cfg, "2026-08-13")
+        assertEquals("doneWords 历史新词全算", 910, st.doneWords)
+        assertEquals("计划完成日从 8/2 起算，约 9/20", "2026-09-20", st.planFinishDate)
+        assertEquals("todayQuota 取新日速", 40, st.todayQuota)
+    }
+
+    // ---- 25. planStartDone 为空 = 旧算法，行为不变 ----
+    @Test
+    fun `25 null planStartDone keeps old behavior`() {
+        val cfg = VocabConfig(
+            totalWords = 200,
+            initialDone = 40,
+            dailyWords = 40,
+            planStartDone = null,
+        )
+        val st = VocabCalculator.computeState(emptyList(), cfg, D)
+        assertEquals("旧算法计划完成日不变", "2026-07-31", st.planFinishDate)
+    }
 }

@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * 动效参数。
- * 全部从 design-tokens.json 生成。
+ * 全部从 design/design-tokens.json 生成。
  * 设计明确禁用：模糊、视差、常驻循环动画。
  * 唯一允许的循环类效果：额度增加时金弧呼吸一次（不循环）。
  */

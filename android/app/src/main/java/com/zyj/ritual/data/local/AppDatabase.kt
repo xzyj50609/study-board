@@ -7,9 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.zyj.ritual.data.local.dao.HistoryEventDao
+import com.zyj.ritual.data.local.dao.PaperSessionDao
 import com.zyj.ritual.data.local.dao.TaskRecordDao
 import com.zyj.ritual.data.local.dao.VocabRecordDao
 import com.zyj.ritual.data.local.entity.HistoryEventEntity
+import com.zyj.ritual.data.local.entity.PaperSessionEntity
 import com.zyj.ritual.data.local.entity.TaskRecordEntity
 import com.zyj.ritual.data.local.entity.VocabRecordEntity
 
@@ -18,14 +20,16 @@ import com.zyj.ritual.data.local.entity.VocabRecordEntity
         TaskRecordEntity::class,
         HistoryEventEntity::class,
         VocabRecordEntity::class,
+        PaperSessionEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun taskRecordDao(): TaskRecordDao
     abstract fun historyEventDao(): HistoryEventDao
     abstract fun vocabRecordDao(): VocabRecordDao
+    abstract fun paperSessionDao(): PaperSessionDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -58,8 +62,29 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v4：新增 paper_session（整套卷 → 消化期）。
+         * 只建新表，不动任何旧表旧行。
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `paper_session` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `completedDate` TEXT NOT NULL,
+                        `partsCount` INTEGER NOT NULL,
+                        `digestionDays` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         /** 所有迁移，按顺序。测试和生产共用同一份，防止两边走岔 */
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         @Volatile
         private var INSTANCE: AppDatabase? = null

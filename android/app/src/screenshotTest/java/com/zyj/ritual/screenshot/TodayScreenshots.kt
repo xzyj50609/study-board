@@ -95,6 +95,24 @@ private fun TodayAheadPreview() = Frame(buildState(24), LightRitualColors)
 private fun TodayEmptyPreview() = Frame(buildState(0), LightRitualColors)
 
 /**
+ * 写过整套卷、今天在空档里。
+ *
+ * 这张图守的是 v1.1 的核心承诺：第一屏必须是金色的空档说明
+ * （含"第 N 篇几月几号接着做"），而不是暗铜色的"缺 N 项"。
+ * v1.0 装上去看到的正是后者——超额干完一整套卷，却被 App 判成欠账。
+ */
+@PreviewTest
+@Preview(name = "今日页-整套卷空档", widthDp = 390, heightDp = 844, showBackground = true)
+@Composable
+private fun TodayDigestionPreview() = Frame(buildStateWithPaper(9), LightRitualColors)
+
+/** 没写过卷子时，"我写了整套卷"这个入口长什么样、在不在第一屏。 */
+@PreviewTest
+@Preview(name = "今日页-整套卷入口", widthDp = 390, heightDp = 844, showBackground = true)
+@Composable
+private fun TodayPaperEntryPreview() = Frame(buildState(15), LightRitualColors)
+
+/**
  * 深色探针 —— 全项目**唯一一张**深色图。
  *
  * 2026-08-07 起出货的是亮色，所以关卡按亮色建（每一页都截）。

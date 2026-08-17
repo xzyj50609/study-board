@@ -8,6 +8,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.zyj.ritual.core.time.BeijingClock
 import com.zyj.ritual.data.local.AppDatabase
+import com.zyj.ritual.data.local.entity.PaperSessionEntity
 import com.zyj.ritual.data.repository.VocabRepository
 import com.zyj.ritual.data.store.VocabConfigStore
 import com.zyj.ritual.domain.vocab.VocabCalculator
@@ -440,5 +441,62 @@ class PersistenceTest {
 
         assertEquals("勾了一项，重开后没了", 1, rows.size)
         assertEquals("1-1", rows[0].id)
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  整套卷登记 + 数据库迁移 v3 → v4
+    // ════════════════════════════════════════════════════════════════
+
+    @Test
+    fun `登记整套卷之后 关掉重开还在`() = runTest {
+        val first = openDb()
+        first.paperSessionDao().insert(
+            PaperSessionEntity(
+                name = "2016 年卷",
+                completedDate = "2026-08-13",
+                partsCount = 7,
+                digestionDays = 4,
+                createdAt = fixedClock.now().toEpochMilli(),
+            )
+        )
+        first.close()
+
+        val second = openDb()
+        val rows = second.paperSessionDao().getAll()
+        second.close()
+
+        assertEquals("登记了一套卷，重开后没了", 1, rows.size)
+        assertEquals("2016 年卷", rows[0].name)
+        assertEquals("2026-08-13", rows[0].completedDate)
+        assertEquals(7, rows[0].partsCount)
+        assertEquals(4, rows[0].digestionDays)
+    }
+
+    @Test
+    fun `迁移到 v4 之后 paper_session 表存在`() {
+        val v3File = File.createTempFile("ritual-migration-v3", ".db").also { it.delete() }
+        val helper = FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(v3File.absolutePath)
+                .callback(object : SupportSQLiteOpenHelper.Callback(3) {
+                    override fun onCreate(db: SupportSQLiteDatabase) = Unit
+                    override fun onUpgrade(db: SupportSQLiteDatabase, old: Int, new: Int) = Unit
+                })
+                .build()
+        )
+
+        try {
+            val db = helper.writableDatabase
+            AppDatabase.MIGRATION_3_4.migrate(db)
+            db.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='paper_session'"
+            ).use {
+                it.moveToFirst()
+                assertEquals("v4 迁移没有建出 paper_session 表", "paper_session", it.getString(0))
+            }
+        } finally {
+            helper.close()
+            v3File.delete()
+        }
     }
 }

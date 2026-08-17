@@ -25,6 +25,15 @@ Release 签名不进入仓库。需要本地打包时，将 `keystore.properties
 .\gradlew.bat packReleaseApk
 ```
 
+## 目录结构
+
+- `android/` — Gradle 工程，全部源码在这里
+- `design/` — 设计交付物：交互原型、视觉方向探索、设计系统三份 HTML，以及 design-tokens.json 和图标 SVG
+- `docs/` — 需求、技术方案、实现计划、设计审计、交接说明等项目文档
+- `dev/` — 开发过程截图（不入库）
+- `releases/` — 历史 APK 存档（不入库）
+- `backups/` — 本机数据备份（不入库）
+
 ## 数据与隐私
 
 个人学习记录、手机导出的备份、历史 APK、签名密钥和本机配置均被明确排除在版本控制之外。

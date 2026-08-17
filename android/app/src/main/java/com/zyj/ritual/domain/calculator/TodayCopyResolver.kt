@@ -27,7 +27,36 @@ object TodayCopyResolver {
         progress: ProgressResult,
         credit: CreditResult,
         today: LocalDate,
+        todayPaper: PaperSession? = null,
+        resumeDate: LocalDate? = null,
     ): TodayCopyResult {
+        // 空档日：整卷是超额干出来的产出，不是请假。
+        // 文案一律按「你已经挣到了」讲，并且必须回答唯一真正要紧的那个问题：
+        // 「那第 N 篇到底哪天做？」——只说"休整不计欠账"等于没回答。
+        if (todayPaper != null && !progress.isAllDone) {
+            val dayIndex = DigestionCalculator.digestionDayIndex(todayPaper, today)
+            val resumeText = resumeDate?.let { "第 ${progress.currentArticle} 篇 ${formatDateShort(it)} 接着做" }
+            val note = buildString {
+                if (dayIndex == 0) {
+                    append("今天写完「${todayPaper.name}」，${todayPaper.partsCount} 个卷面部分，")
+                    append("今天剩下的阅读任务免做。")
+                } else {
+                    append("「${todayPaper.name}」挣来的第 $dayIndex 天 / 共 ${todayPaper.digestionDays} 天空档。")
+                }
+                if (resumeText != null) {
+                    append(resumeText)
+                    append("。")
+                }
+                append("这期间不算欠账，想提前学随时可以。")
+            }
+            return TodayCopyResult(
+                headline = "整套卷换来的空档",
+                primaryButtonText = "提前学第 ${progress.currentArticle} 篇",
+                primaryButtonTarget = PrimaryButtonTarget.StartNextArticle,
+                digestionNote = note,
+            )
+        }
+
         val headline = resolveHeadline(plan, progress)
         val (buttonText, target) = resolvePrimaryButton(plan, calendar, records, progress, credit, today)
 

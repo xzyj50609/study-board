@@ -45,6 +45,22 @@ class PlanStore(private val dataStore: DataStore<Preferences>) {
         val timezone = stringPreferencesKey("timezone")
         // studyWeekdays 用逗号分隔的 DayOfWeek 名字
         val studyWeekdays = stringPreferencesKey("study_weekdays")
+        // 一次性补记：v1.0 漏掉的 2026-08-13 那套卷是否已经补进去过
+        val legacyPaperSeeded = booleanPreferencesKey("legacy_paper_seeded")
+    }
+
+    /**
+     * 一次性补记标记。
+     *
+     * 为什么要有它：补记必须只发生一次。没有这个标记的话，用户手动撤销那条记录后，
+     * 下次冷启动又会给他插回来——撤销按钮变成一个按了没用的按钮，
+     * 而且屏幕上完全看不出这是故障，只会觉得"这 App 有毛病"。
+     */
+    suspend fun isLegacyPaperSeeded(): Boolean =
+        dataStore.data.map { it[Keys.legacyPaperSeeded] ?: false }.first()
+
+    suspend fun markLegacyPaperSeeded() {
+        dataStore.edit { prefs -> prefs[Keys.legacyPaperSeeded] = true }
     }
 
     /**

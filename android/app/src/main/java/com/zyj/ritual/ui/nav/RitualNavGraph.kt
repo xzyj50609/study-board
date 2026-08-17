@@ -23,6 +23,8 @@ import com.zyj.ritual.ui.screens.setup.SetupScreen
 import com.zyj.ritual.ui.screens.setup.SetupViewModel
 import com.zyj.ritual.ui.screens.today.TodayScreen
 import com.zyj.ritual.ui.screens.today.TodayViewModel
+import com.zyj.ritual.ui.screens.vocab.VocabSetupScreen
+import com.zyj.ritual.ui.state.LoadingBox
 import com.zyj.ritual.ui.state.RitualStateHost
 
 /**
@@ -34,6 +36,7 @@ object Routes {
     const val CALENDAR = "calendar"
     const val PROGRESS = "progress"
     const val VOCAB = "vocab"
+    const val VOCAB_SETUP = "vocab_setup"
     const val SETTINGS = "settings"
     const val HISTORY = "history"
     const val ARTICLE = "article/{articleIndex}"
@@ -86,6 +89,10 @@ fun RitualNavGraph(
                     vocabState = vocabState,
                     onAddVocabWords = { words -> todayViewModel.addVocabRecord(words, "new") },
                     onAddVocabReview = { words -> todayViewModel.addVocabRecord(words, "backlog") },
+                    onRegisterPaperSession = { name, completedDate ->
+                        todayViewModel.registerPaperSession(name, completedDate)
+                    },
+                    onUndoPaperSession = { id -> todayViewModel.undoPaperSession(id) },
                     onOpenVocabBoard = {
                         navController.navigate(Routes.VOCAB) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -156,13 +163,39 @@ fun RitualNavGraph(
             })
             com.zyj.ritual.ui.screens.vocab.VocabCalendarScreen(
                 viewModel = vm,
-                onNavigateToSetup = { goToSetup() },
+                onNavigateToSetup = { navController.navigate(Routes.VOCAB_SETUP) },
             )
+        }
+
+        // 背词设置
+        //
+        // ⚠️ 这里绝不能再给一个「写死的默认配置」当初值。
+        // 上一版是 collectAsStateWithLifecycle(initialValue = VocabConfig())：
+        // DataStore 是异步读的，首帧拿到的必然是那份默认值（1883 词 / 起点 380 / 每天 20），
+        // 表单把首帧的值 remember 住就再也不更新了。用户只改了日期一按保存，
+        // 真实的 2416 就被悄悄写回 1883——屏幕上没有任何地方会报错，
+        // 只是所有百分比第二天全变了。
+        // 现在改成：真配置没到之前，这个屏幕根本不构造。
+        composable(Routes.VOCAB_SETUP) {
+            val vocabState by app.vocabRepository.aggregateStateFlow()
+                .collectAsStateWithLifecycle(initialValue = null)
+
+            val aggregate = vocabState
+            if (aggregate == null) {
+                LoadingBox(label = "正在读你存的背词设置…")
+            } else {
+                VocabSetupScreen(
+                    aggregate = aggregate,
+                    vocabRepository = app.vocabRepository,
+                    onSaved = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
 
         composable(Routes.SETTINGS) {
             val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
-                initializer { SettingsViewModel(app.repository, app.clock) }
+                initializer { SettingsViewModel(app.repository, app.backupRepository, app.clock) }
             })
             val settingsState by vm.state.collectAsStateWithLifecycle()
             RitualStateHost(uiState = uiState, onGoToSetup = { goToSetup() }) { state ->

@@ -163,4 +163,17 @@ class PlanCalendarTest {
         val expected = startDate.plusDays(59)  // 30 篇 × 2 天 - 1 = 59
         assertEquals(expected, plan.baseCompletionDate)
     }
+
+    // ——— 消化期：暂停日不排计划，计划日序号整体后移 ———
+
+    @Test
+    fun `消化日不是计划日且映射后移`() {
+        val paused = setOf(startDate.plusDays(1))  // 8/6 暂停
+        val c = PlanCalendar.create(plan, paused)
+
+        assertNull(c.dateToPlanDayIndex(startDate.plusDays(1)))
+        assertEquals(0, c.dateToPlanDayIndex(startDate))
+        assertEquals(1, c.dateToPlanDayIndex(startDate.plusDays(2)))  // 8/7 = 第 1 个计划日
+        assertEquals(startDate.plusDays(2), c.planDayIndexToDate(1))
+    }
 }

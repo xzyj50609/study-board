@@ -4,11 +4,13 @@ import android.util.Log
 import com.zyj.ritual.core.time.BeijingClock
 import com.zyj.ritual.data.local.AppDatabase
 import com.zyj.ritual.data.local.entity.HistoryEventEntity
+import com.zyj.ritual.data.local.entity.PaperSessionEntity
 import com.zyj.ritual.data.local.entity.TaskRecordEntity
 import com.zyj.ritual.data.store.PlanStore
 import com.zyj.ritual.domain.calendar.PlanCalendar
 import com.zyj.ritual.domain.calculator.TodayCopyResolver
 import com.zyj.ritual.domain.calculator.CreditCalculator
+import com.zyj.ritual.domain.calculator.DigestionCalculator
 import com.zyj.ritual.domain.calculator.ProgressCalculator
 import androidx.room.withTransaction
 import com.zyj.ritual.domain.model.*
@@ -22,6 +24,10 @@ import com.zyj.ritual.domain.vocab.VocabRecord
 import kotlinx.coroutines.flow.flatMapLatest
 
 private const val STATE_LOG_TAG = "RitualState"
+
+/** v1.0 承诺补记、却从来没写进代码的那套卷 */
+private val LEGACY_PAPER_DATE: java.time.LocalDate = java.time.LocalDate.of(2026, 8, 13)
+private const val LEGACY_PAPER_NAME = "2016 年卷"
 
 /**
  * 唯一数据入口。
@@ -40,6 +46,7 @@ class StudyRepository(
 ) {
     private val taskDao = db.taskRecordDao()
     private val historyDao = db.historyEventDao()
+    private val paperSessionDao = db.paperSessionDao()
 
     // ——— Plan ———
 
@@ -50,6 +57,10 @@ class StudyRepository(
     // ——— Records ———
 
     fun recordsFlow(): Flow<List<TaskRecord>> = taskDao.observeAll().map { it.toDomainSkippingBadRows() }
+
+    /** 整套卷登记记录（消化期来源）。 */
+    fun paperSessionsFlow(): Flow<List<PaperSession>> =
+        paperSessionDao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
     // ——— 组合派生 ———
 
@@ -75,13 +86,21 @@ class StudyRepository(
             planStore.planFlow(),
             recordsFlow,
             historyFlow,
+            paperSessionsFlow(),
             clock.dateFlow(),
-        ) { plan, records, history, today ->
+        ) { plan, records, history, paperSessions, today ->
             if (plan == null) return@combine null
-            val calendar = PlanCalendar.create(plan)
+            val pausedDates = DigestionCalculator.pausedDates(paperSessions)
+            val calendar = PlanCalendar.create(plan, pausedDates)
             val progress = ProgressCalculator.calculate(plan, records)
-            val credit = CreditCalculator.calculate(plan, calendar, records, today)
-            val copy = TodayCopyResolver.resolve(plan, calendar, records, progress, credit, today)
+            val credit = CreditCalculator.calculate(plan, calendar, records, today, pausedDates)
+            val todayPaper = DigestionCalculator.sessionCovering(today, paperSessions)
+            val resumeDate = if (todayPaper != null) {
+                DigestionCalculator.resumeDate(today, paperSessions)
+            } else null
+            val copy = TodayCopyResolver.resolve(
+                plan, calendar, records, progress, credit, today, todayPaper, resumeDate
+            )
 
             TodayState(
                 plan = plan,
@@ -92,6 +111,9 @@ class StudyRepository(
                 credit = credit,
                 copy = copy,
                 today = today,
+                pausedDates = pausedDates,
+                paperSessions = paperSessions,
+                resumeDate = resumeDate,
             )
         }
     }
@@ -179,6 +201,79 @@ class StudyRepository(
     }
 
     /**
+     * 一键登记整套卷：完成一套英语卷后进入消化期。
+     * 不产生任何 TaskRecord——整卷和六步精读是两套统计，不能混（用户拍板）。
+     */
+    suspend fun registerPaperSession(
+        name: String,
+        completedDate: java.time.LocalDate,
+        partsCount: Int = PaperSession.PARTS_COUNT,
+        digestionDays: Int = PaperSession.DIGESTION_DAYS,
+    ) {
+        val now = clock.now()
+        val session = PaperSession(
+            name = name,
+            completedDate = completedDate,
+            partsCount = partsCount,
+            digestionDays = digestionDays,
+            createdAt = now,
+        )
+        paperSessionDao.insert(PaperSessionEntity.fromDomain(session))
+
+        historyDao.insert(
+            HistoryEventEntity(
+                at = now.toString(),
+                type = HistoryEventType.PAPER_SESSION.name,
+                note = "登记整套卷：$name（${completedDate}）",
+            )
+        )
+    }
+
+    /**
+     * 一次性补记 v1.0 漏掉的那套卷。
+     *
+     * 背景：v1.0 上线时说好「2016 年卷记为 2026-08-13 完成」，但代码里没有任何地方做，
+     * 结果用户一装上就是「8/13 的阅读任务没做 → 欠账 → 暗铜色缺额卡」。
+     * 这个函数把那条既成事实补进去，让空档从 8/13 当天算起。
+     *
+     * 三道闸门，缺一不可：
+     * 1. 只做一次（PlanStore 的标记）——否则用户撤销后会被重新插回来；
+     * 2. 已经有任何一套卷了就不补——用户可能自己先记过，重复会白放四天假；
+     * 3. 计划开始日晚于那天就不补——新装的用户不该凭空多出一套别人的卷子。
+     *
+     * 计划还没建过时直接返回且**不落标记**，等用户设置完计划后下次启动再判断。
+     */
+    suspend fun seedLegacyPaperSessionIfNeeded() {
+        if (planStore.isLegacyPaperSeeded()) return
+        val plan = planStore.getPlan() ?: return
+
+        val alreadyHasSessions = paperSessionDao.getAll().isNotEmpty()
+        val planCoversThatDay = !plan.planStartDate.isAfter(LEGACY_PAPER_DATE)
+
+        if (!alreadyHasSessions && planCoversThatDay) {
+            registerPaperSession(
+                name = LEGACY_PAPER_NAME,
+                completedDate = LEGACY_PAPER_DATE,
+            )
+        }
+        planStore.markLegacyPaperSeeded()
+    }
+
+    /** 撤销一套卷登记（消化期随之消失）。 */
+    suspend fun undoPaperSession(id: Long) {
+        val target = paperSessionDao.getAll().firstOrNull { it.id == id }
+        paperSessionDao.deleteById(id)
+
+        historyDao.insert(
+            HistoryEventEntity(
+                at = clock.now().toString(),
+                type = HistoryEventType.PAPER_SESSION_UNDO.name,
+                note = target?.let { "撤销整套卷：${it.name}" } ?: "撤销整套卷 #$id",
+            )
+        )
+    }
+
+    /**
      * 保存 Plan（首次设置 / 修改设置 / 重新排期）。
      *
      * 注意：重排只会改 Plan 的参数，不会动任何已完成记录（R39）。
@@ -253,39 +348,6 @@ class StudyRepository(
                 .getOrNull()
         }
 
-    // ——— 备份恢复 ———
-
-    /**
-     * 获取全部数据（导出用）。
-     */
-    suspend fun exportAll(): ExportData {
-        val plan = planStore.getPlan()
-            ?: error("Plan not set up, cannot export")
-        val records = taskDao.getAll().map { it.toDomain() }
-        val history = historyDao.getAll().map { it.toDomain() }
-        return ExportData(
-            plan = plan,
-            records = records,
-            history = history,
-            exportedAt = clock.now(),
-        )
-    }
-
-    /**
-     * 整库替换恢复（导入用）。
-     * 事务内执行，出错不影响现有数据。
-     */
-    suspend fun importAll(data: ExportData) {
-        // Room KTX 的 withTransaction 是 suspend 函数，支持在 block 里调 suspend DAO 方法
-        db.withTransaction {
-            taskDao.deleteAll()
-            historyDao.deleteAll()
-            taskDao.insertAll(data.records.map { TaskRecordEntity.fromDomain(it) })
-            historyDao.insertAll(data.history.map { HistoryEventEntity.fromDomain(it) })
-        }
-        // 保存 Plan（DataStore 不在 Room 事务里，最后写）
-        planStore.savePlan(data.plan)
-    }
 }
 
 /**
@@ -301,6 +363,12 @@ data class TodayState(
     val credit: CreditResult,
     val copy: TodayCopyResult,
     val today: java.time.LocalDate,
+    /** 整套卷换来的消化暂停日集合（含完成日当天 + 之后完整消化日） */
+    val pausedDates: Set<java.time.LocalDate>,
+    /** 全部整套卷登记记录 */
+    val paperSessions: List<PaperSession>,
+    /** 今天在空档里时，计划恢复的那一天；不在空档里为 null */
+    val resumeDate: java.time.LocalDate? = null,
 )
 
 /**
@@ -313,4 +381,5 @@ data class ExportData(
     val exportedAt: java.time.Instant,
     val vocabConfig: VocabConfig? = null,
     val vocabRecords: List<VocabRecord>? = null,
+    val paperSessions: List<PaperSession> = emptyList(),
 )

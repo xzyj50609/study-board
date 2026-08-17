@@ -9,6 +9,7 @@ import com.zyj.ritual.domain.vocab.VocabCalculator
 import com.zyj.ritual.domain.vocab.VocabCalendarResult
 import com.zyj.ritual.domain.vocab.VocabConfig
 import com.zyj.ritual.domain.vocab.VocabRecord
+import com.zyj.ritual.domain.vocab.VocabSetupCalculator
 import com.zyj.ritual.domain.vocab.VocabState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -99,6 +100,36 @@ class VocabRepository(
 
     suspend fun saveConfig(config: VocabConfig) {
         configStore.saveConfig(config)
+    }
+
+    /**
+     * 按「锚点」保存背词设置：用户给的是
+     * 「哪天起算 / 那天已背多少 / 从那天起每天多少 / 词书多大 / 考试哪天」，
+     * `initialDone` 这类内部量由 [VocabSetupCalculator] 反推，不再让用户去猜。
+     *
+     * 记录（VocabRecord）一条都不动——设置只改计划口径，不改既成事实。
+     */
+    suspend fun saveSetup(
+        bookName: String,
+        totalWords: Int,
+        planStartDate: String,
+        planStartDone: Int,
+        dailyWords: Int,
+        examDate: String,
+    ) {
+        val config = configStore.getConfig()
+        val records = vocabDao.getAll().map { it.toDomain() }
+        val updated = VocabSetupCalculator.applyAnchor(
+            current = config,
+            records = records,
+            bookName = bookName,
+            totalWords = totalWords,
+            planStartDate = planStartDate,
+            planStartDone = planStartDone,
+            dailyWords = dailyWords,
+            examDate = examDate,
+        )
+        configStore.saveConfig(updated)
     }
 
     suspend fun importBeiciData(config: VocabConfig, records: List<VocabRecord>) {

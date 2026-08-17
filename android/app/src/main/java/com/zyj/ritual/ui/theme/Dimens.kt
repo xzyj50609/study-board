@@ -5,7 +5,7 @@ import androidx.compose.ui.unit.sp
 
 /**
  * 间距、圆角、尺寸。
- * 全部从 design-tokens.json 生成。
+ * 全部从 design/design-tokens.json 生成。
  */
 object RitualSpace {
     val unit = 4.dp

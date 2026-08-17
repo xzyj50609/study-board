@@ -8,8 +8,10 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.zyj.ritual.core.time.TestBeijingClock
 import com.zyj.ritual.data.local.AppDatabase
+import com.zyj.ritual.data.repository.BackupRepository
 import com.zyj.ritual.data.repository.StudyRepository
 import com.zyj.ritual.data.store.PlanStore
+import com.zyj.ritual.data.store.VocabConfigStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,7 +51,9 @@ class TestEnv(fixedDate: LocalDate = LocalDate.of(2026, 8, 6)) {
         File(tempDir, "plan-${System.nanoTime()}.preferences_pb")
     }
 
-    val repository = StudyRepository(db, PlanStore(dataStore), clock)
+    private val planStore = PlanStore(dataStore)
+    val repository = StudyRepository(db, planStore, clock)
+    val backupRepository = BackupRepository(db, planStore, VocabConfigStore(dataStore), clock)
 
     fun advanceTo(date: LocalDate) {
         clock.setInstant(date.atTime(9, 0).atZone(ZoneId.of("Asia/Shanghai")).toInstant())

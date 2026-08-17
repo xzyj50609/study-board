@@ -3,6 +3,7 @@ package com.zyj.ritual.ui.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zyj.ritual.core.time.BeijingClock
+import com.zyj.ritual.data.repository.BackupRepository
 import com.zyj.ritual.data.repository.ExportData
 import com.zyj.ritual.data.repository.StudyRepository
 import com.zyj.ritual.domain.calculator.ProgressCalculator
@@ -23,6 +24,7 @@ import java.time.LocalDate
  */
 class SettingsViewModel(
     private val repository: StudyRepository,
+    private val backupRepository: BackupRepository,
     private val clock: BeijingClock,
 ) : ViewModel() {
 
@@ -103,7 +105,7 @@ class SettingsViewModel(
 
     suspend fun exportData(): ExportData? {
         return try {
-            repository.exportAll()
+            backupRepository.exportAll()
         } catch (e: Exception) {
             null
         }
@@ -111,7 +113,7 @@ class SettingsViewModel(
 
     suspend fun importData(data: ExportData): Boolean {
         return try {
-            repository.importAll(data)
+            backupRepository.importAll(data)
             true
         } catch (e: Exception) {
             false

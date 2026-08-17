@@ -62,8 +62,13 @@ fun RitualStateHost(
     }
 }
 
+/**
+ * 「在等」这件事必须自己说出来，而且要说清在等什么。
+ * 把加载、空、出错压成同一个 null 或同一句「加载中」，
+ * 故障在屏幕上就完全无迹可寻了。
+ */
 @Composable
-private fun LoadingBox() {
+fun LoadingBox(label: String = "加载中…") {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -72,7 +77,7 @@ private fun LoadingBox() {
             .testTag(RitualTestTags.LOADING),
     ) {
         Text(
-            "加载中…",
+            label,
             style = RitualTypography.bodySmall,
             modifier = Modifier.padding(top = RitualSpace.statusBarPad),
         )

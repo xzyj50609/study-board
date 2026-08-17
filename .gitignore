@@ -2,6 +2,7 @@
 .codegraph/
 .idea/
 .thumbnail
+.workbuddy/
 
 # Internal project state and personal data (kept in local snapshots, never public)
 HANDOFF.md

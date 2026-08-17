@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * 今日 / 月历 / 进度 / 文章详情 共享的 ViewModel。
@@ -145,6 +146,20 @@ class TodayViewModel(
     fun addVocabRecord(words: Int, kind: String = "new") {
         viewModelScope.launch {
             vocabRepository.addRecord(words, kind)
+        }
+    }
+
+    /** 一键登记整套卷（进入消化期）。 */
+    fun registerPaperSession(name: String, completedDate: LocalDate) {
+        viewModelScope.launch {
+            repository.registerPaperSession(name, completedDate)
+        }
+    }
+
+    /** 撤销整套卷登记。 */
+    fun undoPaperSession(id: Long) {
+        viewModelScope.launch {
+            repository.undoPaperSession(id)
         }
     }
 }

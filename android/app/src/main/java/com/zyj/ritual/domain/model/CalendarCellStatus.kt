@@ -20,4 +20,5 @@ enum class CalendarCellStatus {
     PAST_DEFICIT,       // 过去缺额待补（暗铜 + 格底）R29
     FUTURE_PLANNED,     // 未来计划中 R30
     FUTURE_ADVANCED,    // 未来已提前完成（金环）R30
+    DIGESTION,          // 消化日：整套卷换来的休整日，不排计划、不算欠账
 }

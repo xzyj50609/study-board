@@ -46,4 +46,25 @@ class VocabViewModel(
             vocabRepository.saveReviewDue(due)
         }
     }
+
+    /** 按锚点保存背词设置（内部量由 VocabSetupCalculator 反推）。 */
+    fun saveSetup(
+        bookName: String,
+        totalWords: Int,
+        planStartDate: String,
+        planStartDone: Int,
+        dailyWords: Int,
+        examDate: String,
+    ) {
+        viewModelScope.launch {
+            vocabRepository.saveSetup(
+                bookName = bookName,
+                totalWords = totalWords,
+                planStartDate = planStartDate,
+                planStartDone = planStartDone,
+                dailyWords = dailyWords,
+                examDate = examDate,
+            )
+        }
+    }
 }

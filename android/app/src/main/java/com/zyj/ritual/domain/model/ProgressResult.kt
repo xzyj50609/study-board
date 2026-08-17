@@ -44,6 +44,12 @@ data class TodayCopyResult(
     val headline: String,         // 首页大标题
     val primaryButtonText: String,// 底部主按钮文字
     val primaryButtonTarget: PrimaryButtonTarget, // 主按钮点击后做什么
+    /**
+     * 今天若处于整套卷的消化窗口，这里是非空的说明文案
+     * （如「消化日 2/4 · 2016 年卷」）；为 null 表示普通学习日。
+     * 消化日不催进度，但允许主动提前学。
+     */
+    val digestionNote: String? = null,
 )
 
 sealed interface PrimaryButtonTarget {

@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,21 +26,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zyj.ritual.data.repository.TodayState
 import com.zyj.ritual.domain.calculator.CreditCalculator
 import com.zyj.ritual.domain.calculator.TodayCopyResolver
 import com.zyj.ritual.domain.model.CreditState
+import com.zyj.ritual.domain.model.PaperSession
 import com.zyj.ritual.domain.model.RecordSource
 import com.zyj.ritual.domain.model.TaskRecord
 import com.zyj.ritual.ui.components.CreditCard
+import com.zyj.ritual.ui.components.DateFieldRow
+import com.zyj.ritual.ui.components.OutlineButton
 import com.zyj.ritual.ui.components.ProgressRing
+import com.zyj.ritual.ui.components.RitualDatePickerDialog
 import com.zyj.ritual.ui.components.SegmentedTicks
 import com.zyj.ritual.ui.components.TaskRow
 import com.zyj.ritual.ui.components.TaskRowState
 import com.zyj.ritual.ui.theme.RitualColors
 import com.zyj.ritual.ui.theme.RitualFontFamilies
+import com.zyj.ritual.ui.theme.RitualRadius
 import com.zyj.ritual.ui.theme.RitualSpace
 import com.zyj.ritual.ui.theme.RitualTextStyles
 import com.zyj.ritual.ui.theme.RitualTypeSize
@@ -74,6 +82,8 @@ fun TodayScreen(
     onAddVocabWords: (Int) -> Unit = {},
     onAddVocabReview: (Int) -> Unit = {},
     onOpenVocabBoard: () -> Unit = {},
+    onRegisterPaperSession: (String, LocalDate) -> Unit = { _, _ -> },
+    onUndoPaperSession: (Long) -> Unit = {},
 ) {
     // 撤销确认弹窗状态
     var undoDialog by remember { mutableStateOf<UndoDialogState?>(null) }
@@ -146,6 +156,29 @@ fun TodayScreen(
                 .padding(horizontal = RitualSpace.screenPadding)
                 .padding(top = RitualSpace.listGap),
         )
+
+        // —— 空档说明 ——
+        // 位置刻意放在标题正下方、进度环之上：今天之所以没任务，
+        // 原因必须是用户睁眼看到的第一句话，不能藏在要滑一屏才看得见的地方。
+        val digestionNote = copy.digestionNote
+        if (digestionNote != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = RitualSpace.screenPadding)
+                    .padding(top = RitualSpace.listGap)
+                    .clip(RoundedCornerShape(RitualRadius.card))
+                    .background(RitualColors.accentGold.copy(alpha = 0.12f))
+                    .padding(14.dp),
+            ) {
+                Text(
+                    text = digestionNote,
+                    style = RitualTypography.bodyMedium,
+                    color = RitualColors.accentGold,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
 
         Spacer(Modifier.height(RitualSpace.sectionGap))
 
@@ -247,6 +280,15 @@ fun TodayScreen(
                 onReschedule = { showRescheduleDialog = true },
             )
         }
+
+        Spacer(Modifier.height(RitualSpace.sectionGap))
+
+        // —— 整套卷登记 / 消化期 ——
+        PaperSessionSection(
+            state = state,
+            onRegister = onRegisterPaperSession,
+            onUndo = onUndoPaperSession,
+        )
 
         Spacer(Modifier.height(RitualSpace.sectionGap))
 
@@ -426,6 +468,208 @@ private fun TaskGroup(
 }
 
 // —— 撤销确认弹窗 ——
+
+/**
+ * 整套卷登记卡。
+ *
+ * 上一版这里是一行小灰字，用户根本没看见它，于是写完卷子的事 App 一无所知，
+ * 照旧把当天的阅读任务算成欠账、糊一张暗铜色缺额卡在首页。
+ * 所以这版做成整块卡 + 满宽按钮：入口必须一眼看得到，不然这个功能等于不存在。
+ */
+@Composable
+private fun PaperSessionSection(
+    state: TodayState,
+    onRegister: (String, LocalDate) -> Unit,
+    onUndo: (Long) -> Unit,
+) {
+    var showRegisterDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = RitualSpace.screenPadding)
+            .clip(RoundedCornerShape(RitualRadius.cardLg))
+            .background(RitualColors.surfaceLow)
+            .padding(RitualSpace.cardPadding),
+    ) {
+        Text(
+            "写了整套英语卷？",
+            style = RitualTypography.titleMedium.copy(
+                color = RitualColors.onBg,
+                fontWeight = FontWeight.Medium,
+            ),
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "一套卷 = 4 篇阅读 + 完形 + 新题型 + 翻译，" +
+                "抵 ${PaperSession.PARTS_COUNT} 个卷面部分。记一笔就往后空出 " +
+                "${PaperSession.DIGESTION_DAYS} 天，这几天不排任务也不算欠账。",
+            style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
+        )
+
+        Spacer(Modifier.height(RitualSpace.listGap))
+
+        OutlineButton(
+            text = "＋ 我写了整套卷",
+            onClick = { showRegisterDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (state.paperSessions.isNotEmpty()) {
+            Spacer(Modifier.height(RitualSpace.listGap))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(0.5.dp)
+                    .background(RitualColors.divider),
+            )
+            state.paperSessions.forEach { session ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = RitualSpace.listGap),
+                ) {
+                    Text(
+                        text = "${session.name} · " +
+                            "${session.completedDate.monthValue} 月 ${session.completedDate.dayOfMonth} 日写的",
+                        style = RitualTypography.bodySmall.copy(color = RitualColors.onBg),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "撤销",
+                        style = RitualTypography.bodySmall.copy(color = RitualColors.warnText),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable { onUndo(session.id) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+            }
+        }
+    }
+
+    if (showRegisterDialog) {
+        RegisterPaperDialog(
+            today = state.today,
+            defaultName = "${state.today.year} 年卷",
+            onConfirm = { name, date ->
+                onRegister(name, date)
+                showRegisterDialog = false
+            },
+            onDismiss = { showRegisterDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun RegisterPaperDialog(
+    today: LocalDate,
+    defaultName: String,
+    onConfirm: (String, LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(defaultName) }
+    // 卷子常常是晚上写完、第二天才想起来记，所以完成日必须能往回选。
+    // 上一版写死成"今天"，昨天写的卷子怎么记都对不上，空档也就从错的那天开始。
+    var date by remember { mutableStateOf(today) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        containerColor = RitualColors.surface,
+        titleContentColor = RitualColors.onBg,
+        textContentColor = RitualColors.onBgMuted,
+        onDismissRequest = onDismiss,
+        title = { Text("记一套卷", style = RitualTypography.titleMedium) },
+        text = {
+            Column {
+                Text(
+                    "哪天写完的？空档从这天开始往后算 ${PaperSession.DIGESTION_DAYS} 天。",
+                    style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted),
+                )
+                Spacer(Modifier.height(RitualSpace.listGap))
+
+                // 常见就三种情况，先给按钮；更早的再翻日历
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    QuickDateChip("今天", date == today) { date = today }
+                    QuickDateChip("昨天", date == today.minusDays(1)) { date = today.minusDays(1) }
+                    QuickDateChip("前天", date == today.minusDays(2)) { date = today.minusDays(2) }
+                }
+
+                Spacer(Modifier.height(RitualSpace.listGap))
+                DateFieldRow(
+                    label = "完成日",
+                    date = date,
+                    onClick = { showDatePicker = true },
+                )
+
+                Spacer(Modifier.height(RitualSpace.listGap))
+                Text("卷名", style = RitualTypography.bodySmall.copy(color = RitualColors.onBgMuted))
+                Spacer(Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name.ifBlank { defaultName }, date) }) {
+                Text(
+                    "记上",
+                    style = RitualTypography.bodyMedium.copy(
+                        color = RitualColors.accentInk,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "取消",
+                    style = RitualTypography.bodyMedium.copy(color = RitualColors.onBgMuted),
+                )
+            }
+        },
+    )
+
+    if (showDatePicker) {
+        RitualDatePickerDialog(
+            initialDate = date,
+            title = "哪天写完的",
+            onConfirm = {
+                date = it
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
+        )
+    }
+}
+
+@Composable
+private fun QuickDateChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(RitualRadius.button))
+            .background(if (selected) RitualColors.accentInk else RitualColors.surfaceLow)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Text(
+            label,
+            style = RitualTypography.bodySmall.copy(
+                color = if (selected) RitualColors.onAccent else RitualColors.onBg,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            ),
+        )
+    }
+}
 
 private data class UndoDialogState(
     val articleIndex: Int,

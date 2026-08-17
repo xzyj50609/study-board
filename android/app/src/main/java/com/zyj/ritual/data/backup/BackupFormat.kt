@@ -13,21 +13,24 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * 备份文件格式（v2）。
+ * 备份文件格式（v3）。
  *
  * 包含：
  * - 读文章 (plan, records, history)
- * - 背单词 (vocabConfig, vocabRecords) —— 可选，v1 备份导入时该项为 null
+ * - 背单词 (vocabConfig, vocabRecords, createdAt)
+ *
+ * v1/v2 可能没有背词字段；v3 起新备份必须完整包含两项。
  */
 @Serializable
 data class BackupFile(
-    val formatVersion: Int = 2,
+    val formatVersion: Int = 3,
     val exportedAt: String,  // ISO-8601 Instant
     val plan: BackupPlan,
     val records: List<BackupRecord>,
     val history: List<BackupHistoryEvent>,
     val vocabConfig: BackupVocabConfig? = null,
     val vocabRecords: List<BackupVocabRecord>? = null,
+    val paperSessions: List<BackupPaperSession> = emptyList(),
 ) {
     fun toDomain(): ExportData = ExportData(
         plan = plan.toDomain(),
@@ -36,20 +39,27 @@ data class BackupFile(
         exportedAt = Instant.parse(exportedAt),
         vocabConfig = vocabConfig?.toDomain(),
         vocabRecords = vocabRecords?.map { it.toDomain() },
+        paperSessions = paperSessions.map { it.toDomain() },
     )
 
     companion object {
-        fun fromDomain(data: ExportData): BackupFile = BackupFile(
-            formatVersion = CURRENT_VERSION,
-            exportedAt = data.exportedAt.toString(),
-            plan = BackupPlan.fromDomain(data.plan),
-            records = data.records.map { BackupRecord.fromDomain(it) },
-            history = data.history.map { BackupHistoryEvent.fromDomain(it) },
-            vocabConfig = data.vocabConfig?.let { BackupVocabConfig.fromDomain(it) },
-            vocabRecords = data.vocabRecords?.map { BackupVocabRecord.fromDomain(it) },
-        )
+        fun fromDomain(data: ExportData): BackupFile {
+            require(data.vocabConfig != null && data.vocabRecords != null) {
+                "完整备份必须同时包含背词配置和背词记录"
+            }
+            return BackupFile(
+                formatVersion = CURRENT_VERSION,
+                exportedAt = data.exportedAt.toString(),
+                plan = BackupPlan.fromDomain(data.plan),
+                records = data.records.map { BackupRecord.fromDomain(it) },
+                history = data.history.map { BackupHistoryEvent.fromDomain(it) },
+                vocabConfig = BackupVocabConfig.fromDomain(data.vocabConfig),
+                vocabRecords = data.vocabRecords.map { BackupVocabRecord.fromDomain(it) },
+                paperSessions = data.paperSessions.map { BackupPaperSession.fromDomain(it) },
+            )
+        }
 
-        const val CURRENT_VERSION = 2
+        const val CURRENT_VERSION = 3
     }
 }
 
@@ -155,6 +165,8 @@ data class BackupVocabConfig(
     val startDate: String,
     val totalWords: Int,
     val initialDone: Int,
+    /** 新计划起点量；null = 旧算法（与 v0.9 前的老备份兼容） */
+    val planStartDone: Int? = null,
     val dailyWords: Int,
     val examDate: String,
     val rateChanges: List<BackupRateChange> = emptyList(),
@@ -170,6 +182,7 @@ data class BackupVocabConfig(
         startDate = startDate,
         totalWords = totalWords,
         initialDone = initialDone,
+        planStartDone = planStartDone,
         dailyWords = dailyWords,
         examDate = examDate,
         rateChanges = rateChanges.map { it.toDomain() },
@@ -187,6 +200,7 @@ data class BackupVocabConfig(
             startDate = cfg.startDate,
             totalWords = cfg.totalWords,
             initialDone = cfg.initialDone,
+            planStartDone = cfg.planStartDone,
             dailyWords = cfg.dailyWords,
             examDate = cfg.examDate,
             rateChanges = cfg.rateChanges.map { BackupRateChange.fromDomain(it) },
@@ -217,17 +231,46 @@ data class BackupVocabRecord(
     val date: String,
     val words: Int,
     val kind: String = "new",
+    val createdAt: Long = 0,
 ) {
-    fun toDomain(): VocabRecord = VocabRecord(date, words, kind)
+    fun toDomain(): VocabRecord = VocabRecord(date, words, kind, createdAt)
 
     companion object {
-        fun fromDomain(r: VocabRecord): BackupVocabRecord = BackupVocabRecord(r.date, r.words, r.kind)
+        fun fromDomain(r: VocabRecord): BackupVocabRecord =
+            BackupVocabRecord(r.date, r.words, r.kind, r.createdAt)
+    }
+}
+
+@Serializable
+data class BackupPaperSession(
+    val name: String,
+    val completedDate: String,   // ISO LocalDate
+    val partsCount: Int = PaperSession.PARTS_COUNT,
+    val digestionDays: Int = PaperSession.DIGESTION_DAYS,
+    val createdAt: String,       // ISO Instant
+) {
+    fun toDomain(): PaperSession = PaperSession(
+        name = name,
+        completedDate = LocalDate.parse(completedDate),
+        partsCount = partsCount,
+        digestionDays = digestionDays,
+        createdAt = Instant.parse(createdAt),
+    )
+
+    companion object {
+        fun fromDomain(s: PaperSession): BackupPaperSession = BackupPaperSession(
+            name = s.name,
+            completedDate = s.completedDate.toString(),
+            partsCount = s.partsCount,
+            digestionDays = s.digestionDays,
+            createdAt = s.createdAt.toString(),
+        )
     }
 }
 
 /**
  * 备份 JSON 序列化器。
- * 支持版本 1 和版本 2。
+ * 支持导入版本 1 到版本 3；新导出始终是完整的版本 3。
  */
 object BackupSerializer {
 
@@ -250,8 +293,15 @@ object BackupSerializer {
 
         require(file.plan.totalArticles > 0) { "Invalid totalArticles" }
         require(file.plan.daysPerArticle in 1..3) { "Invalid daysPerArticle" }
+        val hasVocabConfig = file.vocabConfig != null
+        val hasVocabRecords = file.vocabRecords != null
+        require(hasVocabConfig == hasVocabRecords) {
+            "备份中的背词配置和背词记录必须同时存在或同时缺失"
+        }
+        if (file.formatVersion >= 3) {
+            require(hasVocabConfig) { "v3 完整备份缺少背词数据" }
+        }
 
         return file.toDomain()
     }
 }
-
