@@ -5,8 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.zyj.ritual.R
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 
@@ -35,6 +37,19 @@ object RitualFontFamilies {
 
     // 占位：以后替换成 R.font.ibm_plex_mono_regular / ibm_plex_mono_medium
     val mono: FontFamily = FontFamily.Monospace
+
+    /**
+     * 标题用的思源宋体（子集，约 260KB）。
+     *
+     * 为什么要打包一个字体：正文走系统字体，而用户的系统中文字体是楷体——
+     * 全 App 从标题到正文一个字形，看着发呆板。标题换成宋体，衬线和楷体形态差异明显，
+     * 层次一眼能分出来。
+     *
+     * ⚠️ 只裁了工程里出现过的字（见 tools/subset_title_font.py）。
+     * 改了界面文案要重跑那个脚本，否则新字没裁进来，手机上会**静默显示成空白**——
+     * 单测和截图都发现不了。TitleFontCoverageTest 就是拦这个的，别删。
+     */
+    val title: FontFamily = FontFamily(Font(R.font.title_serif))
 }
 
 /**
@@ -57,28 +72,34 @@ fun ritualTypography(colors: RitualColorScheme) = Typography(
             trim = LineHeightStyle.Trim.None,
         ),
     ),
+    // 下面四档是「标题」，统一走宋体。正文、数字、时间戳一律不动——
+    // 全用一种字形才是用户说的那个「呆板」，两种就够了，再多就乱
     headlineLarge = TextStyle(
         fontSize = RitualTypeSize.h1,
         fontWeight = FontWeight.Light,
         lineHeight = 38.sp,
+        fontFamily = RitualFontFamilies.title,
         color = colors.onBg,
     ),
     headlineMedium = TextStyle(
         fontSize = RitualTypeSize.h2,
         fontWeight = FontWeight.Light,
         lineHeight = 31.sp,
+        fontFamily = RitualFontFamilies.title,
         color = colors.onBg,
     ),
     headlineSmall = TextStyle(
         fontSize = RitualTypeSize.h3,
         fontWeight = FontWeight.Medium,
         lineHeight = 28.sp,
+        fontFamily = RitualFontFamilies.title,
         color = colors.onBg,
     ),
     titleMedium = TextStyle(
         fontSize = RitualTypeSize.title,
         fontWeight = FontWeight.Medium,
         lineHeight = 24.sp,
+        fontFamily = RitualFontFamilies.title,
         color = colors.onBg,
     ),
     bodyLarge = TextStyle(

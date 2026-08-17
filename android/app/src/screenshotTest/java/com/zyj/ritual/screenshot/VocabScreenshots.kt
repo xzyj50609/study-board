@@ -191,6 +191,26 @@ class VocabScreenshots {
         }
     }
 
+    // ════════════════════════════════════════════════════════════════
+    //  顶部留白（2026-08-17 新增）
+    //
+    //  用户反馈「从状态栏到『背词设置』这行蓝字之间空太多」。根因是这一页
+    //  自己套了第二层 Scaffold，把状态栏高度让了两遍（MainActivity 已经让过一次）。
+    //  这张图钉的就是「蓝字必须贴近屏幕顶端」——嵌套 Scaffold 一旦被人加回来，
+    //  这张基准图会立刻变化。
+    // ════════════════════════════════════════════════════════════════
+
+    @PreviewTest
+    @Preview(name = "背词看板-顶部不留白", widthDp = 390, heightDp = 844, showBackground = true)
+    @Composable
+    fun vocabBoardTopGap() {
+        RitualTheme {
+            VocabCalendarScreenContent(
+                aggregate = buildVocabAggregate(SETUP_RECORDS, SETUP_CONFIG),
+            )
+        }
+    }
+
     // ════════════════════════════════════════════════════════════
     //  设置页
     //
